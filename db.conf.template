@@ -1,0 +1,17 @@
+[sqlite]
+file_path = datastore.db
+
+[postgresql]
+user     = changeme
+password = changeme
+hostname = localhost
+port     = 5432
+database = scheduler
+sslmode  = disable
+
+[mysql]
+user     = changeme
+password = changeme
+hostname = localhost
+port     = 3306
+database = scheduler

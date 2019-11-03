@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/
+eggs/
+*.egg-info/
+*.egg
+
+# Project artifacts
+.venv
+.pytest_cache
+tmp
+TODO
+datastore.db
+*.conf
+example-jobs/
