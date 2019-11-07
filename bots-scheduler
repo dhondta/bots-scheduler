@@ -23,7 +23,7 @@ VENV_REQS     = ["ndscheduler", "pybots"]
 
 
 def at_exit():
-    if isinstance(static_path, MirrorPath):
+    if "static_path" in globals() and isinstance(static_path, MirrorPath):
         static_path.unmirror()
 
 
@@ -90,15 +90,17 @@ def run_server(namespace):
     static_path = None
     _ = namespace
     logger.info("Setting up the virtual environment...")
+    os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
     with VirtualEnv(".venv", VENV_REQS) as venv:
         from ndscheduler import utils as ndutils
+        # this modification allows to define proxy job classes without catching
+        #  these as valid templates in the WUI
         code_replace(ndutils.get_all_available_jobs,
             "if issubclass(module_property, job.JobBase):",
             "if issubclass(module_property, job.JobBase) and "
                 "len(module_property.__subclasses__()) == 0:")
         # configure and run the server
-        #from ndscheduler import settings
-        from ndscheduler.server import server
+        logging.setLogger(globals())
         logger.info("Starting the scheduling server...")
         settings = venv.ndscheduler.settings
         # 1. base settings
@@ -130,6 +132,7 @@ def run_server(namespace):
         # 5. now start the server with the tuned settings
         if _.verbose:
             logger.debug("Applied settings:\n{}".format(vars(settings)))
+        from ndscheduler.server import server
         server.SchedulerServer.run()
 
 
