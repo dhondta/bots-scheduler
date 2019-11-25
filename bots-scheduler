@@ -100,7 +100,7 @@ def run_server(namespace):
             "if issubclass(module_property, job.JobBase) and "
                 "len(module_property.__subclasses__()) == 0:")
         # configure and run the server
-        logging.setLogger(globals())
+        logging.setLogger()
         logger.info("Starting the scheduling server...")
         settings = venv.ndscheduler.settings
         # 1. base settings
