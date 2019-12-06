@@ -70,7 +70,7 @@ def main():
                          default=8, help="Maximum number of workers")
     # maintenance commands' arguments
     sparsers.add_parser("clean", help="remove server's virtual environment")
-    initialize(globals())
+    initialize()
     if args.command == "run":
         run_server(args)
     else:
