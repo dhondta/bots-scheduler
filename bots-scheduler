@@ -4,13 +4,13 @@ from tinyscript import *
 
 __script__    = "BotsScheduler"
 __author__    = "Alexandre D'Hondt"
-__version__   = "1.0"
+__version__   = "1.0.2"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __reference__ = "https://github.com/Nextdoor/ndscheduler"
 __doc__ = """
 This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on
- robots made with PyBots (https://github.com/dhondta/pybots)."
+ robots made with PyBots (https://github.com/dhondta/python-pybots)."
 """
 
 
@@ -23,62 +23,8 @@ VENV_REQS     = ["ndscheduler", "pybots"]
 
 
 def at_exit():
-    if "static_path" in globals() and isinstance(static_path, MirrorPath):
+    if "static_path" in globals() and isinstance(static_path, ts.MirrorPath):
         static_path.unmirror()
-
-
-def main():
-    sparsers = parser.add_subparsers(dest="command",
-                                     help="command to be executed")
-    # run command arguments
-    run = sparsers.add_parser("run", help="run the server")
-    # 1. base settings
-    net = run.add_argument_group("base options")
-    net.add_argument("-d", "--debug", action="store_true",
-                     help="run the server in debug mode")
-    net.add_argument("-j", "--jobs", action="append", default=["jobs"],
-                     help="folder with jobs to be imported")
-    net.add_argument("-p", "--port", type=port_number, default=8888,
-                     help="server's port number")
-    # 2. database settings
-    db = run.add_argument_group("database options")
-    db.add_argument("--dbms", choices=["sqlite", "postgresql", "mysql"],
-                    default="sqlite", help="database management system")
-    db.add_argument("--db-config", default="db.conf", type=file_exists,
-                    help="database INI configuration file")
-    db.add_argument("--executions-table", default="scheduler_execution",
-                    help="executions table name")
-    db.add_argument("--jobs-table", default="scheduler_jobs",
-                    help="jobs table name")
-    db.add_argument("--logs-table", default="scheduler_jobauditlog",
-                    help="logs table name")
-    # 3. APScheduler settings
-    aps = run.add_argument_group("APScheduler options")
-    aps.add_argument("--job-coalesce", dest="job_coal", action="store_false",
-                     help="Coalesce missed executions of a job")
-    aps.add_argument("--job-max-instances", dest="job_max", type=pos_int,
-                     default=3, help="Maximum number of concurrently"
-                                     " executing instances of a job")
-    aps.add_argument("--job-misfire", dest="job_misfire", default=3600,
-                     help="Job misfire grace time in seconds")
-    aps.add_argument("--threadpool-size", dest="tp_size", type=pos_int,
-                     default=2, help="Threadpool size")
-    aps.add_argument("--timezone", default="UTC", help="server's timezone")
-    # 4. Tornado settings
-    tornado = run.add_argument_group("Tornado options")
-    tornado.add_argument("--max-workers", dest="tworkers", type=pos_int,
-                         default=8, help="Maximum number of workers")
-    # maintenance commands' arguments
-    sparsers.add_parser("clean", help="remove server's virtual environment")
-    initialize()
-    if args.command == "run":
-        run_server(args)
-    else:
-        if os.path.isfile(DB_SQLITE_DEF):
-            os.remove(DB_SQLITE_DEF)
-        if os.path.isdir(VENV_NAME):
-            shutil.rmtree(VENV_NAME)
-        logger.info("DONE")
 
 
 def run_server(namespace):
@@ -95,12 +41,12 @@ def run_server(namespace):
         from ndscheduler import utils as ndutils
         # this modification allows to define proxy job classes without catching
         #  these as valid templates in the WUI
-        code_replace(ndutils.get_all_available_jobs,
+        code.replace(ndutils.get_all_available_jobs,
             "if issubclass(module_property, job.JobBase):",
             "if issubclass(module_property, job.JobBase) and "
                 "len(module_property.__subclasses__()) == 0:")
         # configure and run the server
-        logging.setLogger()
+        logging.setLogger("bots-scheduler")
         logger.info("Starting the scheduling server...")
         settings = venv.ndscheduler.settings
         # 1. base settings
@@ -126,7 +72,7 @@ def run_server(namespace):
         settings.TORNADO_MAX_WORKERS = _.tworkers
         # 4. layout settings
         # settings.APP_INDEX_PAGE left as default (index.html)
-        static_path = MirrorPath(STATIC_PATH, settings.STATIC_DIR_PATH)
+        static_path = ts.MirrorPath(STATIC_PATH, settings.STATIC_DIR_PATH)
         settings.STATIC_DIR_PATH = \
         settings.TEMPLATE_DIR_PATH = STATIC_PATH
         # 5. now start the server with the tuned settings
@@ -137,4 +83,54 @@ def run_server(namespace):
 
 
 if __name__ == "__main__":
-    main()
+    sparsers = parser.add_subparsers(dest="command",
+                                     help="command to be executed")
+    # run command arguments
+    run = sparsers.add_parser("run", help="run the server")
+    # 1. base settings
+    net = run.add_argument_group("base options")
+    net.add_argument("-d", "--debug", action="store_true",
+                     help="run the server in debug mode")
+    net.add_argument("-j", "--jobs", action="append", default=["jobs"],
+                     help="folder with jobs to be imported")
+    net.add_argument("-p", "--port", type=ts.port_number, default=8888,
+                     help="server's port number")
+    # 2. database settings
+    db = run.add_argument_group("database options")
+    db.add_argument("--dbms", choices=["sqlite", "postgresql", "mysql"],
+                    default="sqlite", help="database management system")
+    db.add_argument("--db-config", default="db.conf", type=ts.file_exists,
+                    help="database INI configuration file")
+    db.add_argument("--executions-table", default="scheduler_execution",
+                    help="executions table name")
+    db.add_argument("--jobs-table", default="scheduler_jobs",
+                    help="jobs table name")
+    db.add_argument("--logs-table", default="scheduler_jobauditlog",
+                    help="logs table name")
+    # 3. APScheduler settings
+    aps = run.add_argument_group("APScheduler options")
+    aps.add_argument("--job-coalesce", dest="job_coal", action="store_false",
+                     help="Coalesce missed executions of a job")
+    aps.add_argument("--job-max-instances", dest="job_max", type=ts.pos_int,
+                     default=3, help="Maximum number of concurrently"
+                                     " executing instances of a job")
+    aps.add_argument("--job-misfire", dest="job_misfire", default=3600,
+                     help="Job misfire grace time in seconds")
+    aps.add_argument("--threadpool-size", dest="tp_size", type=ts.pos_int,
+                     default=2, help="Threadpool size")
+    aps.add_argument("--timezone", default="UTC", help="server's timezone")
+    # 4. Tornado settings
+    tornado = run.add_argument_group("Tornado options")
+    tornado.add_argument("--max-workers", dest="tworkers", type=ts.pos_int,
+                         default=8, help="Maximum number of workers")
+    # maintenance commands' arguments
+    sparsers.add_parser("clean", help="remove server's virtual environment")
+    initialize()
+    if args.command == "run":
+        run_server(args)
+    else:
+        if os.path.isfile(DB_SQLITE_DEF):
+            os.remove(DB_SQLITE_DEF)
+        if os.path.isdir(VENV_NAME):
+            shutil.rmtree(VENV_NAME)
+        logger.info("DONE")
