@@ -1,25 +1,28 @@
 #!/usr/bin/python3
+from multiprocessing import Process
 from tinyscript import *
 
 
 __script__    = "BotsScheduler"
 __author__    = "Alexandre D'Hondt"
-__version__   = "1.0.2"
+__version__   = "1.1.0"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __reference__ = "https://github.com/Nextdoor/ndscheduler"
 __doc__ = """
-This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on
- robots made with PyBots (https://github.com/dhondta/python-pybots)."
+This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on robots made with PyBots
+ (https://github.com/dhondta/python-pybots).
+Moreover, it provides authentication through the use of an integrated reverse proxy.
 """
 
 
 BANNER_FONT   = "smkeyboard"
 DB_NDS_BASE   = "ndscheduler.core.datastore.providers.sqlite.Datastore"
 DB_SQLITE_DEF = "datastore.db"
+DEFAULT_USERS = ["administrator:change-this"]
 STATIC_PATH   = "static"
 VENV_NAME     = ".venv"
-VENV_REQS     = ["ndscheduler", "pybots"]
+VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler", "pybots"]
 
 
 def at_exit():
@@ -27,107 +30,147 @@ def at_exit():
         static_path.unmirror()
 
 
+def run_proxy(namespace):
+    """ This function configures and starts a reverse authentication proxy.
+
+    :param namespace: options' namespace
+    """
+    _ = namespace
+    from mitmproxy import addons
+    from mitmproxy.master import Master
+    from mitmproxy.tools import cmdline
+    from mitmproxy.tools.main import run
+
+    class BlockHttp:
+        def request(self, flow):
+             if flow.client_conn.tls_established:
+                flow.reply.kill()
+
+    class AuthMaster(Master):
+        def __init__(self, opts):
+            super().__init__(opts)
+            self.addons.add(*addons.default_addons())
+            self.addons.add(BlockHttp())
+    # configure and run the reverse proxy
+    logger.info("Starting the authentication proxy...")
+    # 1. set the IP (default if not in debug mode, local address otherwise)
+    host = ["0.0.0.0", "127.0.0.1"][_.debug]
+    # 2. if no htpasswd file provided, create one with the DEFAULT_USERS
+    if not _.htpasswd:
+        logger.debug("Generating the htpasswd file...")
+        import bcrypt
+        _.htpasswd = ".htpasswd"
+        with open(_.htpasswd, 'wb') as f:
+            for user in DEFAULT_USERS:
+                username, password = user.split(":")
+                salt = bcrypt.gensalt()
+                f.write(b("%s:%s") % (b(username), bcrypt.hashpw(b(password), salt)))
+    # 3. setup the arguments for the proxy run function
+    args = "--listen-host %s -p %d --proxyauth @%s -m reverse:http://localhost:%s" % \
+           (host, _.port, _.htpasswd, _.port + 1)
+    if _.certificate:
+        args += " --certs %s" % _.certificate
+    # 4. now start the server as a separate process
+    p = Process(target=run, args=(AuthMaster, cmdline.mitmproxy, args.split()))
+    p.start()
+    return p
+
+
 def run_server(namespace):
-    """ This function sets up a virtualenv, configures and starts a server.
+    """ This function configures and starts a scheduling server.
     
     :param namespace: options' namespace
     """
     global static_path
     static_path = None
     _ = namespace
-    logger.info("Setting up the virtual environment...")
-    os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
-    with VirtualEnv(".venv", VENV_REQS) as venv:
-        from ndscheduler import utils as ndutils
-        # this modification allows to define proxy job classes without catching
-        #  these as valid templates in the WUI
-        code.replace(ndutils.get_all_available_jobs,
-            "if issubclass(module_property, job.JobBase):",
-            "if issubclass(module_property, job.JobBase) and "
-                "len(module_property.__subclasses__()) == 0:")
-        # configure and run the server
-        logging.setLogger("bots-scheduler")
-        logger.info("Starting the scheduling server...")
-        settings = venv.ndscheduler.settings
-        # 1. base settings
-        settings.DEBUG = _.debug
-        settings.HTTP_ADDRESS = ["0.0.0.0", "127.0.0.1"][_.debug]
-        settings.HTTP_PORT = _.port
-        settings.JOB_CLASS_PACKAGES = _.jobs
-        settings.TIMEZONE = _.timezone
-        # NB: SCHEDULER_CLASS is not handled
-        # 2. database settings
-        settings.DATABASE_CLASS = DB_NDS_BASE + _.dbms.capitalize()
-        c = configparser.ConfigParser()
-        c.read(_.db_config)
-        settings.DATABASE_CONFIG_DICT = dict(c[_.dbms])
-        settings.JOBS_TABLENAME = _.jobs_table
-        settings.EXECUTIONS_TABLENAME = _.executions_table
-        settings.AUDIT_LOGS_TABLENAME = _.logs_table
-        # 3. other settings
-        settings.THREAD_POOL_SIZE = _.tp_size
-        settings.JOB_MAX_INSTANCES = _.job_max
-        settings.JOB_COALESCE = _.job_coal
-        settings.JOB_MISFIRE_GRACE_SEC = _.job_misfire
-        settings.TORNADO_MAX_WORKERS = _.tworkers
-        # 4. layout settings
-        # settings.APP_INDEX_PAGE left as default (index.html)
-        static_path = ts.MirrorPath(STATIC_PATH, settings.STATIC_DIR_PATH)
-        settings.STATIC_DIR_PATH = \
-        settings.TEMPLATE_DIR_PATH = STATIC_PATH
-        # 5. now start the server with the tuned settings
-        if _.verbose:
-            logger.debug("Applied settings:\n{}".format(vars(settings)))
-        from ndscheduler.server import server
-        server.SchedulerServer.run()
+    from ndscheduler import settings
+    from ndscheduler import utils as ndutils
+    from ndscheduler.server import server
+    # this modification allows to define proxy job classes without catching these as valid templates in the WUI
+    code.replace(ndutils.get_all_available_jobs, "if issubclass(module_property, job.JobBase):",
+                 "if issubclass(module_property, job.JobBase) and len(module_property.__subclasses__()) == 0:")
+    # configure and run the server
+    logger.info("Starting the scheduling server...")
+    # 1. base settings
+    settings.DEBUG = _.debug
+    settings.HTTP_ADDRESS = "localhost"
+    settings.HTTP_PORT = _.port + 1
+    settings.JOB_CLASS_PACKAGES = _.jobs
+    settings.TIMEZONE = _.timezone
+    # NB: SCHEDULER_CLASS is not handled
+    # 2. database settings
+    settings.DATABASE_CLASS = DB_NDS_BASE + _.dbms.capitalize()
+    c = configparser.ConfigParser()
+    c.read(_.db_config)
+    settings.DATABASE_CONFIG_DICT = dict(c[_.dbms])
+    settings.JOBS_TABLENAME = _.jobs_table
+    settings.EXECUTIONS_TABLENAME = _.executions_table
+    settings.AUDIT_LOGS_TABLENAME = _.logs_table
+    # 3. other settings
+    settings.THREAD_POOL_SIZE = _.tp_size
+    settings.JOB_MAX_INSTANCES = _.job_max
+    settings.JOB_COALESCE = _.job_coal
+    settings.JOB_MISFIRE_GRACE_SEC = _.job_misfire
+    settings.TORNADO_MAX_WORKERS = _.tworkers
+    # 4. layout settings
+    # settings.APP_INDEX_PAGE left as default (index.html)
+    static_path = ts.MirrorPath(STATIC_PATH, settings.STATIC_DIR_PATH)
+    settings.STATIC_DIR_PATH = \
+    settings.TEMPLATE_DIR_PATH = STATIC_PATH
+    # 5. now start the server with the tuned settings
+    if _.verbose:
+        logger.debug("Applied settings:\n{}".format(vars(settings)))
+    server.SchedulerServer.run()
 
 
 if __name__ == "__main__":
-    sparsers = parser.add_subparsers(dest="command",
-                                     help="command to be executed")
+    sparsers = parser.add_subparsers(dest="command", help="command to be executed")
     # run command arguments
     run = sparsers.add_parser("run", help="run the server")
     # 1. base settings
     net = run.add_argument_group("base options")
-    net.add_argument("-d", "--debug", action="store_true",
-                     help="run the server in debug mode")
-    net.add_argument("-j", "--jobs", action="append", default=["jobs"],
-                     help="folder with jobs to be imported")
-    net.add_argument("-p", "--port", type=ts.port_number, default=8888,
-                     help="server's port number")
+    net.add_argument("-d", "--debug", action="store_true", help="run the server in debug mode")
+    net.add_argument("-j", "--jobs", action="append", default=["jobs"], help="folder with jobs to be imported")
+    net.add_argument("-p", "--port", type=ts.port_number, default=8888, help="server's port number",
+                     note="this will be the listening port of the proxy, this of the scheduler will be port+1")
     # 2. database settings
     db = run.add_argument_group("database options")
-    db.add_argument("--dbms", choices=["sqlite", "postgresql", "mysql"],
-                    default="sqlite", help="database management system")
-    db.add_argument("--db-config", default="db.conf", type=ts.file_exists,
-                    help="database INI configuration file")
-    db.add_argument("--executions-table", default="scheduler_execution",
-                    help="executions table name")
-    db.add_argument("--jobs-table", default="scheduler_jobs",
-                    help="jobs table name")
-    db.add_argument("--logs-table", default="scheduler_jobauditlog",
-                    help="logs table name")
+    db.add_argument("--dbms", choices=["sqlite", "postgresql", "mysql"], default="sqlite",
+                    help="database management system")
+    db.add_argument("--db-config", default="db.conf", type=ts.file_exists, help="database INI configuration file")
+    db.add_argument("--executions-table", default="scheduler_execution", help="executions table name")
+    db.add_argument("--jobs-table", default="scheduler_jobs", help="jobs table name")
+    db.add_argument("--logs-table", default="scheduler_jobauditlog", help="logs table name")
     # 3. APScheduler settings
     aps = run.add_argument_group("APScheduler options")
     aps.add_argument("--job-coalesce", dest="job_coal", action="store_false",
                      help="Coalesce missed executions of a job")
-    aps.add_argument("--job-max-instances", dest="job_max", type=ts.pos_int,
-                     default=3, help="Maximum number of concurrently"
-                                     " executing instances of a job")
-    aps.add_argument("--job-misfire", dest="job_misfire", default=3600,
-                     help="Job misfire grace time in seconds")
-    aps.add_argument("--threadpool-size", dest="tp_size", type=ts.pos_int,
-                     default=2, help="Threadpool size")
+    aps.add_argument("--job-max-instances", dest="job_max", type=ts.pos_int, default=3,
+                     help="Maximum number of concurrently executing instances of a job")
+    aps.add_argument("--job-misfire", dest="job_misfire", default=3600, help="Job misfire grace time in seconds")
+    aps.add_argument("--threadpool-size", dest="tp_size", type=ts.pos_int, default=2, help="Threadpool size")
     aps.add_argument("--timezone", default="UTC", help="server's timezone")
     # 4. Tornado settings
     tornado = run.add_argument_group("Tornado options")
-    tornado.add_argument("--max-workers", dest="tworkers", type=ts.pos_int,
-                         default=8, help="Maximum number of workers")
+    tornado.add_argument("--max-workers", dest="tworkers", type=ts.pos_int, default=8, help="Maximum number of workers")
+    # 5. Proxy settings
+    proxy = run.add_argument_group("Mitmproxy options")
+    proxy.add_argument("--certificate", type=ts.file_exists, help="TLS private certificate file",
+                       note="ifNone, the default certificate of mitmproxy is used")
+    proxy.add_argument("--htpasswd", type=ts.file_exists, help="authentication file",
+                       note="if None, .htpasswd is automatically created with the DEFAULT_USERS")
     # maintenance commands' arguments
     sparsers.add_parser("clean", help="remove server's virtual environment")
     initialize()
     if args.command == "run":
-        run_server(args)
+        logger.info("Setting up the virtual environment...")
+        os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
+        logging.setLogger("bots-scheduler")
+        with VirtualEnv(".venv", VENV_REQS) as venv:
+            p = run_proxy(args)
+            run_server(args)
+            p.join(5)
     else:
         if os.path.isfile(DB_SQLITE_DEF):
             os.remove(DB_SQLITE_DEF)

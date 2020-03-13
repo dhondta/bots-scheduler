@@ -5,7 +5,7 @@
 
 # Bots Scheduler
 
-This application is a scheduling system based on [Nextdoor Scheduler](https://github.com/Nextdoor/ndscheduler) that uses jobs templated upon [PyBots](https://github.com/dhondta/pybots). It especially focuses on tasks derived from security-related Web services like Shodan or Censys.
+This application is a scheduling system based on [Nextdoor Scheduler](https://github.com/Nextdoor/ndscheduler) that uses jobs templated upon [PyBots](https://github.com/dhondta/pybots). It especially focuses on tasks derived from security-related Web services like Shodan or Censys. Additionally, it protects the original Web server from Nextdoor with an authentication proxy based on [mitmproxy](https://github.com/mitmproxy/mitmproxy).
 
 ## Installation
 
@@ -20,7 +20,7 @@ $ cd bots-scheduler
 $ ./bots-scheduler -h
 usage: ./bots-scheduler [-h] [-v] {run,clean} ...
 
-BotsScheduler v1.0
+BotsScheduler v1.1.0
 Author   : Alexandre D'Hondt
 Copyright: © 2019 A. D'Hondt
 License  : GNU Affero General Public License v3.0
@@ -38,7 +38,7 @@ extra arguments:
   -h, --help     show this help message and exit
   -v, --verbose  verbose mode (default: False)
 
-$ ./bots-scheduler run -h
+$ ./bots-scheduler run --help
 usage: ./bots-scheduler run [-h] [-d] [-j JOBS] [-p PORT]
                             [--dbms {sqlite,postgresql,mysql}]
                             [--db-config DB_CONFIG]
@@ -49,15 +49,17 @@ usage: ./bots-scheduler run [-h] [-d] [-j JOBS] [-p PORT]
                             [--job-misfire JOB_MISFIRE]
                             [--threadpool-size TP_SIZE] [--timezone TIMEZONE]
                             [--max-workers TWORKERS]
+                            [--certificate CERTIFICATE] [--htpasswd HTPASSWD]
 
-BotsScheduler v1.0
+BotsScheduler v1.1.0
 Author   : Alexandre D'Hondt
-Copyright: © 2019 A. D'Hondt
+Copyright: © 2020 A. D'Hondt
 License  : GNU Affero General Public License v3.0
 Reference: https://github.com/Nextdoor/ndscheduler
 
-This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on
- robots made with PyBots (https://github.com/dhondta/pybots)."
+This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on robots made with PyBots
+ (https://github.com/dhondta/python-pybots).
+Moreover, it provides authentication through the use of an integrated reverse proxy.
 
 extra arguments:
   -h, --help            show this help message and exit
@@ -66,6 +68,7 @@ base options:
   -d, --debug           run the server in debug mode (default: False)
   -j JOBS, --jobs JOBS  folder with jobs to be imported (default: ['jobs'])
   -p PORT, --port PORT  server's port number (default: 8888)
+                         NB: this will be the listening port of the proxy, this of the scheduler will be port+1
 
 database options:
   --dbms {sqlite,postgresql,mysql}
@@ -92,5 +95,12 @@ APScheduler options:
 Tornado options:
   --max-workers TWORKERS
                         Maximum number of workers (default: 8)
+
+Mitmproxy options:
+  --certificate CERTIFICATE
+                        TLS private certificate file (default: None)
+                         NB: ifNone, the default certificate of mitmproxy is used
+  --htpasswd HTPASSWD   authentication file (default: None)
+                         NB: if None, .htpasswd is automatically created with the DEFAULT_USERS
 
 ```
