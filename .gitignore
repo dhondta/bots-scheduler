@@ -16,4 +16,8 @@ tmp
 TODO
 datastore.db
 *.conf
+*.crt
+*.pem
 example-jobs/
+htpasswd
+.htpasswd
