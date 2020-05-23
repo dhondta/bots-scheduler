@@ -20,6 +20,7 @@ BANNER_FONT   = "smkeyboard"
 DB_NDS_BASE   = "ndscheduler.core.datastore.providers.sqlite.Datastore"
 DB_SQLITE_DEF = "datastore.db"
 DEFAULT_USERS = ["administrator:change-this"]
+LOG_FORMAT    = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 STATIC_PATH   = "static"
 VENV_NAME     = ".venv"
 VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler", "pybots"]
@@ -61,6 +62,7 @@ def run_proxy(namespace):
             self.addons.add(*addons.default_addons())
             self.addons.add(BlockHttp())
             self.addons.add(SecureHeaders())
+    
     # configure and run the reverse proxy
     logger.info("Starting the authentication proxy...")
     # 1. set the IP according to the chosen mode
@@ -167,16 +169,18 @@ if __name__ == "__main__":
     # 5. Proxy settings
     proxy = run.add_argument_group("Mitmproxy options")
     proxy.add_argument("--certificate", type=ts.file_exists, help="TLS private certificate file",
-                       note="ifNone, the default certificate of mitmproxy is used")
+                       note="if None, the default certificate of mitmproxy is used")
     proxy.add_argument("--htpasswd", type=ts.file_exists, help="authentication file",
                        note="if None, .htpasswd is automatically created with the DEFAULT_USERS")
     # maintenance commands' arguments
     sparsers.add_parser("clean", help="remove server's virtual environment")
-    initialize()
+    initialize(noargs_action="help")
+    logging.renameLogger("main", "bots_scheduler")
+    logging.setLoggers("ndscheduler.core.scheduler_manager", "ndscheduler.job", "ndscheduler.server.server",
+                       "tornado.access")
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
-        logging.setLogger("bots-scheduler")
         with VirtualEnv(".venv", VENV_REQS) as venv:
             p = run_proxy(args)
             run_server(args)
