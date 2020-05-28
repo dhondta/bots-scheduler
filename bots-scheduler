@@ -176,8 +176,8 @@ if __name__ == "__main__":
     sparsers.add_parser("clean", help="remove server's virtual environment")
     initialize(noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
-    logging.setLoggers("ndscheduler.core.scheduler_manager", "ndscheduler.job", "ndscheduler.server.server",
-                       "tornado.access")
+    logging.setLoggers("apscheduler.executors.default", "ndscheduler.core.scheduler_manager", "ndscheduler.job",
+                       "ndscheduler.server.server", "tornado.access")
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
