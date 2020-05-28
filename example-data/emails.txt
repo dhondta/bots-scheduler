@@ -1,0 +1,4 @@
+john.doe@gmail.com
+jdoe@hotmail.com
+johndoe@yahoo.com
+johnd@adobe.com
