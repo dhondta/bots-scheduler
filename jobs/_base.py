@@ -16,6 +16,7 @@ DEFAULTS = {
     'arguments':         [],
     'example_arguments': "",
     'report_title':      None,
+    'enabled':           True,
 }
 
 

@@ -11,10 +11,12 @@ class Shell(JobBase):
         'notes':             "This will run an executable program. You can specify a list of arguments.",
         'arguments':         [{'type': 'string', 'description': 'Executable path'}],
         'example_arguments': '["/usr/local/my_program", "--file", "/tmp/abc"]',
+        'enabled':           False,  # enable at own risk
     }
     
     @report
     def run(self, *args, **kwargs):
-        out = check_output(args, stderr=PIPE)
-        return Section(" ".join(args)), Code(codecs.decode(out, "utf-8"))
+        cmd = args[0]
+        out = check_output(cmd, stderr=PIPE, shell=True)
+        return Section(cmd), Code(codecs.decode(out, "utf-8"))
 
