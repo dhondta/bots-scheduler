@@ -4,12 +4,18 @@ site_author: dhondta
 docs_dir: docs
 pages:
   - Introduction: index.md
-  - Robots: robots.md
+  - Available jobs: jobs.md
+  - How to make a job: howto.md
 extra:
   mailto: alexandre.dhondt@gmail.com
 theme: readthedocs
+extra_javascript:
+  - js/collapsible-navbar.js
 use_directory_urls: false
 markdown_extensions:
-  - admonition
   - toc:
-      permalink: True
+      permalink: true
+  - admonition
+  - codehilite:
+      linenums: true
+  - pymdownx.details
