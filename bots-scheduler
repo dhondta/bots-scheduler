@@ -112,7 +112,8 @@ def run_server(namespace):
     # this modification allows to define proxy job classes without catching these as valid templates in the WUI
     code.replace(ndutils.get_all_available_jobs, "if issubclass(module_property, job.JobBase):",
                  "if issubclass(module_property, job.JobBase) and len(module_property.__subclasses__()) == 0 and "
-                 "type(module_property) != job.JobBase and module_property.meta_info().get('enabled', True):")
+                 "type(module_property) != job.JobBase and module_property.meta_info().get('enabled', True)"
+                 " and module_property.meta_info().get('job_class_name', 'New Job') != 'New Job':")
     # this modification leverages the modification on utils.get_all_available_jobs to filter jobs at the scheduler level
     try:  # this applies the modification on the code from the GitHub repo
         from ndscheduler.corescheduler.scheduler_manager import SchedulerManager
