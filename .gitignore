@@ -21,3 +21,4 @@ datastore.db
 example-jobs/
 htpasswd
 .htpasswd
+geckodriver.log
