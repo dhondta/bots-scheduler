@@ -1,5 +1,5 @@
 """A job to run a search on emails or domains using HaveIBeenPwned?."""
-from pybots import HaveIBeenPwnedBot
+from pybots import HaveIBeenPwnedBot, PwnedPasswordsBot
 
 from ._base import *
 
@@ -10,7 +10,7 @@ class HaveIBeenPwnedJob(JobBase):
         'notes':             "This will perform a search on HaveIBeenPwned? against the provided file with a list of "
                              "emails or domains that could have been involved in recent data breaches.",
         'arguments':         [{'type': 'string', 'description': 'Path to the list of emails and/or domains'}],
-        'example_arguments': '["path/to/emails_or_domains.list"]',
+        'example_arguments': '"path/to/emails_or_domains.list" or ["path/to/list1", "path/to/list2", ...]',
     }
 
     @report
@@ -39,4 +39,21 @@ class HaveIBeenPwnedJob(JobBase):
                 img = Image(breach.pop('LogoPath'), width="80%")
                 report.append(Table([[img, Data(d, size=12)]], column_headers=None))
         return report
+
+
+class PwnedPasswordsJob(JobBase):
+    info = {
+        'job_class_name':    "Have I Been Pwned? - Pwned passwords check",
+        'notes':             "This will perform a search on HaveIBeenPwned? and its PwnedPasswords database against the"
+                             " provided file with a list of passwords that could have been involved in recent data "
+                             "breaches.",
+        'arguments':         [{'type': 'string', 'description': 'Path to the list of passwords'}],
+        'example_arguments': '"path/to/passwords.list" or ["path/to/passwords1", "path/to/passwords2", ...]',
+    }
+
+    @report
+    def run(self, passwords_path, **kwargs):
+        with PwnedPasswordsBot() as bot:
+            pwned = bot.check_from_file(passwords_path)
+        return [Section("Pwned passwords found on HaveIBeenPwned?"), List(*pwned, size=14)]
 
