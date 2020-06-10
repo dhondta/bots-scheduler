@@ -10,7 +10,7 @@ class NuclearLeaksJob(JobBase):
         'notes':             "This will perform a search on NuclearLeaks' list against the provided file with a list of"
                              " emails or domains that could have been involved in data breaches.",
         'arguments':         [{'type': 'string', 'description': 'Path to the list of emails and/or domains'}],
-        'example_arguments': '["path/to/emails_or_domains.list"]',
+        'example_arguments': '"path/to/emails_or_domains.list" or ["path/to/list1", "path/to/list2", ...]',
     }
 
     @report
