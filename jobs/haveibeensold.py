@@ -10,7 +10,7 @@ class HaveIBeenSoldJob(JobBase):
         'notes':             "This will perform a search on HaveIBeenSold? against the provided file with a list of "
                              "emails that could have been sold to third parties.",
         'arguments':         [{'type': 'string', 'description': 'Path to the list of emails'}],
-        'example_arguments': '["path/to/emails.list"]',
+        'example_arguments': '"path/to/emails.list" or ["path/to/list1", "path/to/list2", ...]',
     }
 
     @report
