@@ -55,5 +55,5 @@ class PwnedPasswordsJob(JobBase):
     def run(self, passwords_path, **kwargs):
         with PwnedPasswordsBot() as bot:
             pwned = bot.check_from_file(passwords_path)
-        return [Section("Pwned passwords found on HaveIBeenPwned?"), List(*pwned, size=14)]
+        return [Section("Pwned passwords found on HaveIBeenPwned?"), List(*pwned)]
 
