@@ -17,6 +17,6 @@ class GhostProjectJob(JobBase):
     def run(self, emails_path, **kwargs):
         with GhostProjectBot() as bot:
             result = bot.check_from_file(emails_path)
-        result = {k: ", ".join(v) for k, v in result.items()}
+        result = {k: ", ".join(_ for _ in v if _ != "") for k, v in result.items()}
         return [Section("Email addresses with known passwords found on GhostProject"), Data(result)] 
 
