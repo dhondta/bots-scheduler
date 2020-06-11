@@ -1,3 +1,5 @@
+import socket
+import struct
 import sys
 import traceback
 from collections import OrderedDict
@@ -6,7 +8,7 @@ from tinyscript.report import *
 from tinyscript.report import __features__
 
 
-__all__ = ["JobBase", "OrderedDict", "report"] + __features__
+__all__ = ["JobBase", "OrderedDict", "ip2int", "report"] + __features__
 
 
 DEFAULTS = {
@@ -18,6 +20,9 @@ DEFAULTS = {
     'report_title':      None,
     'enabled':           True,
 }
+
+
+ip2int = lambda a: struct.unpack("!I", socket.inet_aton(a))[0]
 
 
 def report(f):
