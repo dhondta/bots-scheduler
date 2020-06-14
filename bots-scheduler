@@ -5,10 +5,11 @@ from tinyscript import *
 
 __script__    = "BotsScheduler"
 __author__    = "Alexandre D'Hondt"
-__version__   = "1.1.1"
+__version__   = "1.1.2"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __reference__ = "https://github.com/Nextdoor/ndscheduler"
+__source__    = "https://github.com/dhondta/bots-scheduler"
 __doc__ = """
 This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on robots made with PyBots
  (https://github.com/dhondta/python-pybots).
@@ -45,7 +46,7 @@ def run_proxy(namespace):
     class BlockHttp:
         """ Ensure that HTTP cannot be used. """
         def request(self, flow):
-             if flow.client_conn.tls_established:
+            if not flow.client_conn.tls_established:
                 flow.reply.kill()
 
     class SecureHeaders:
@@ -64,12 +65,13 @@ def run_proxy(namespace):
             self.addons.add(SecureHeaders())
     
     # configure and run the reverse proxy
+    mitmlogger = logging.getLogger("mitmproxy.reverse.proxy")
     logger.info("Starting the authentication proxy...")
     # 1. set the IP according to the chosen mode
     host = ["0.0.0.0", "127.0.0.1"][_.local or _.debug]
     # 2. if no htpasswd file provided, create one with the DEFAULT_USERS
     if not _.htpasswd:
-        logger.debug("Generating the htpasswd file...")
+        mitmlogger.debug("Generating the htpasswd file...")
         import bcrypt
         _.htpasswd = ".htpasswd"
         with open(_.htpasswd, 'wb') as f:
@@ -78,13 +80,15 @@ def run_proxy(namespace):
                 salt = bcrypt.gensalt()
                 f.write(b("%s:%s") % (b(username), bcrypt.hashpw(b(password), salt)))
     # 3. setup the arguments for the proxy run function
-    args = "--listen-host %s -p %d --proxyauth @%s -m reverse:http://localhost:%s" % \
+    args = "--listen-host %s -p %d --proxyauth @%s --mode reverse:http://localhost:%d/" % \
            (host, _.port, _.htpasswd, _.port + 1)
     if _.certificate:
         args += " --certs %s" % _.certificate
     # 4. now start the server as a separate process
+    mitmlogger.info("Running proxy at {}:{} ...".format(host, _.port))
     p = Process(target=run, args=(AuthMaster, cmdline.mitmproxy, args.split()))
     p.start()
+    mitmlogger.info("*** You can access scheduler web ui at http://{}:{} ***".format(host, _.port))
     return p
 
 
@@ -171,8 +175,7 @@ def run_server(namespace):
     static_path = ts.MirrorPath(STATIC_PATH, settings.STATIC_DIR_PATH)
     settings.STATIC_DIR_PATH = settings.TEMPLATE_DIR_PATH = STATIC_PATH
     # 5. now start the server with the tuned settings
-    if _.verbose:
-        logger.debug("Applied settings:\n{}".format(vars(settings)))
+    logger.debug("Applied settings:\n{}".format(vars(settings)))
     server.SchedulerServer.run()
 
 
@@ -217,8 +220,8 @@ if __name__ == "__main__":
     sparsers.add_parser("clean", help="remove server's virtual environment")
     initialize(noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
-    logging.setLoggers("apscheduler.executors.default", "ndscheduler.core.scheduler_manager", "ndscheduler.job",
-                       "ndscheduler.server.server", "tornado.access")
+    logging.setLoggers("apscheduler.executors.default", "mitmproxy.reverse.proxy", "ndscheduler.core.scheduler_manager",
+                       "ndscheduler.job", "ndscheduler.server.server", "tornado.access")
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
