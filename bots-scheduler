@@ -88,7 +88,7 @@ def run_proxy(namespace):
     mitmlogger.info("Running proxy at {}:{} ...".format(host, _.port))
     p = Process(target=run, args=(AuthMaster, cmdline.mitmproxy, args.split()))
     p.start()
-    mitmlogger.info("*** You can access scheduler web ui at http://{}:{} ***".format(host, _.port))
+    mitmlogger.info("*** You can access scheduler web ui at https://{}:{} ***".format(host, _.port))
     return p
 
 
