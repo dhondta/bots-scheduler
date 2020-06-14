@@ -4,8 +4,9 @@ site_author: dhondta
 docs_dir: docs
 pages:
   - Introduction: index.md
-  - Available jobs: jobs.md
-  - How to make a job: howto.md
+  - 'Server tuning': server.md
+  - 'Available jobs': jobs.md
+  - 'How to make a job': howto.md
 extra:
   mailto: alexandre.dhondt@gmail.com
 theme: readthedocs
