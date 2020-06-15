@@ -10,7 +10,7 @@ class ShellCommand(JobBase):
         'job_class_name':    "Shell Command",
         'notes':             "This will run an OS command. The command is specified as a list of tokens. "
                              "Use at your own risk !",
-        'arguments':         [{'type': 'list', 'description': 'tokenized command'}],
+        'arguments':         [{'type': 'list', 'description': 'tokenized OS command'}],
         'example_arguments': '["/usr/local/my_program", "--file", "/tmp/abc"]',
         'enabled':           False,
     }
@@ -25,8 +25,8 @@ class RawShellCommand(JobBase):
     info = {
         'job_class_name':    "Raw Shell Command",
         'notes':             "This will run an OS command. Use at your own risk !",
-        'arguments':         [{'type': 'string', 'description': 'Executable path'}],
-        'example_arguments': '["/usr/local/my_program", "--file", "/tmp/abc"]',
+        'arguments':         [{'type': 'string', 'description': 'OS command as is'}],
+        'example_arguments': "/usr/local/my_program --file /tmp/abc",
         'enabled':           False,
     }
     
