@@ -33,7 +33,7 @@ This module contains one job:
 
 <p align="center"><img src="img/job_censys-hosts-ports-check.png" alt="Censys - Hosts and open ports check"></p>
 
-!!! note "API ID and secret required"
+!!! warning "API ID and secret required"
     
     This job requires that you subscribe on [Censys](https://censys.io/) and that you ask for an API identifier and secret.
 
@@ -86,7 +86,7 @@ This module contains one job:
 
 <p align="center"><img src="img/job_shodan-hosts-ports-check.png" alt="Shodan - Hosts and open services check"></p>
 
-!!! note "API key required"
+!!! warning "API key required"
     
     This job requires that you subscribe on [Shodan](https://shodan.io/) and that you purchase an API key.
 

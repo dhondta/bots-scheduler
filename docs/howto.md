@@ -97,8 +97,7 @@ A report is an assembly of objects from [Tinyscript](https://github.com/dhondta/
 `Image(s,d,w,h)` | `img` | Image reference, taking up to 4 arguments: the [s]ource and optionally a [d]escription, the [w]idth and the [h]eight
 `List(*i)` | `ol`, `ul` | List of [i]tems that can be ordered or not
 `Table(d,ch,rh,cf)` | `table` | Table with column and row headers, taking 3 arguments : a list of rows as the [d]ata, a list of [c]olumn [h]eaders, a list of [r]ow [h]eaders and a list of [c]olumn [f]ooters
-`Text(c,t)` | `p` | Text paragraph, takin 1 argument : the [c]ontent to be displayed as a paragraph or any user-defined [t]ag
-`Title(t)` | `h1` | Big bold title line, taking 1 argument : title's [t]ext
+`Text(c,t)` | `p` | Text paragraph, taking 1 argument : the [c]ontent to be displayed as a paragraph or any user-defined [t]ag
 `Section(t)` | `h2` | Bold section title line, taking 1 argument : section title's [t]ext
 `Subsection(t)` | `h3` | Bold section title line, taking 1 argument : subsection title's [t]ext
 
@@ -108,6 +107,10 @@ By convention, the available jobs use the `Section` object class for their repor
 Section("Pwned passwords found on HaveIBeenPwned?")
 List(*list_of_pwned_passwords)
 ```
+
+!!! note "Report object nesting"
+    
+    Report objects can be nested, e.g. `Table([[img, Data(d)]])`.
 
 Another interesting example is this of `ghostproject.GhostProjectJob`:
 

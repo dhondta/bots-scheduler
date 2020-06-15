@@ -15,3 +15,11 @@ This project also uses [mitmproxy](https://github.com/mitmproxy/mitmproxy) to pr
 - an authentication proxy (currently relying on HTTP Basic Auth)
 - HTTPS enforcement
 - HTTP security headers
+
+### Documentation overview
+
+The remainder of this documentation is structured as follows:
+
+- [*Server tuning*](server.html): this section is more sysadmin-oriented and presents application's running options.
+- [*Available jobs*](jobs.html): this section is for users that want to manage job tasks in the Web user interface.
+- ]*How to make a job*](howto.html): this section is developer-oriented for defining a new job class.
