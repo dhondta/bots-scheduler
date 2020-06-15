@@ -37,7 +37,7 @@ class HaveIBeenPwnedJob(JobBase):
                             flags.append(k[2:].lower())
                 d['Flags'] = ", ".join(flags).capitalize()
                 img = Image(breach.pop('LogoPath'), width="80%")
-                report.append(Table([[img, Data(d, size=12)]], column_headers=None))
+                report.append(Table([[Data(d, size=12)]], row_headers=[img], column_headers=None))
         return report
 
 
