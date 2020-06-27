@@ -1,1 +1,1 @@
-tinyscript>=1.21.7
+tinyscript>=1.22.4
