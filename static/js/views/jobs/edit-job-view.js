@@ -1,9 +1,3 @@
-/**
- * edit-job view.
- *
- * @author wenbin@nextdoor.com
- */
-
 require.config({
   paths: {
     'jquery': 'vendor/jquery',
@@ -11,23 +5,21 @@ require.config({
     'backbone': 'vendor/backbone',
     'bootstrap': 'vendor/bootstrap',
     'bootstrapswitch': 'vendor/bootstrap-switch',
-
+    'select2': 'vendor/select2',
     'utils': 'utils',
-
+    'config': 'config',
     'text': 'vendor/text',
     'edit-job-modal': 'templates/edit-job.html',
-    'job-class-notes': 'templates/job-class-notes.html'
+    'job-class-notes': 'templates/job-class-notes.html',
+    'job-class-args': 'templates/job-class-args.html'
   },
-
   shim: {
     'bootstrapswitch': {
       deps: ['bootstrap']
     },
-
     'bootstrap': {
       deps: ['jquery']
     },
-
     'backbone': {
       deps: ['underscore', 'jquery'],
       exports: 'Backbone'
@@ -35,18 +27,12 @@ require.config({
   }
 });
 
-define(['utils',
-        'text!edit-job-modal',
-        'text!job-class-notes',
-        'backbone',
-        'bootstrapswitch'], function(utils, EditJobModalHtml, JobClassNotesHtml) {
-
+define(['utils', 'config', 'text!edit-job-modal', 'text!job-class-notes', 'text!job-class-args', 'backbone',
+        'bootstrapswitch'], function(utils, EditJobModalHtml, JobClassNotesHtml, JobClassArgsHtml) {
   'use strict';
-
   return Backbone.View.extend({
     initialize: function() {
       $('body').append(EditJobModalHtml);
-
       var jobsMetaInfo = $.parseJSON($('#jobs-meta-info').html());
       var data = [];
       _.forEach(jobsMetaInfo, function(job) {
@@ -56,22 +42,25 @@ define(['utils',
           job: job
         })
       });
+      var files;
+      $('#add-job-button').on('click', _.bind(function(e) {
+        files = [];
+        $.get(config.files_url, function(data) {
+          _.forEach(data.files, function(file) {
+            files.push(file.filename);
+          });
+        });
+      }, this));
       $('#edit-input-job-task-class').select2({
         data: data
       }).on("select2-selecting", function(e) {
-        $('#edit-job-class-notes').html(
-            _.template(JobClassNotesHtml)({job: e.choice.job})
-        );
+        $('#edit-job-class-notes').html(_.template(JobClassNotesHtml)({job: e.choice.job}));
+        $('#input-job-task-args').html(_.template(JobClassArgsHtml)({job: e.choice.job, files: files}));
       });
-
       this.bindEditJobConfirmClickEvent();
       this.bindDeleteJobConfirmClickEvent();
       this.bindModalPopupEvent();
     },
-
-    /**
-     * Bind click event for delete-job button.
-     */
     bindDeleteJobConfirmClickEvent: function() {
       var $button = $('#delete-job-confirm-button');
       $button.off('click');
@@ -83,26 +72,20 @@ define(['utils',
         }
       }, this));
     },
-
-    /**
-     * Bind popup event for edit-job modal.
-     */
     bindModalPopupEvent: function() {
       $('#edit-job-modal').on('show.bs.modal', _.bind(function(e) {
         var $button = $(e.relatedTarget);
         var jobId = $button.data('id');
         var jobActive = $button.data('job-active');
-
         $('#edit-input-job-name').val($button.data('job-name'));
         $('#edit-input-job-task-class').val($button.data('job-task')).trigger('change');
-        $('#edit-input-job-task-args').val($button.attr('data-job-pubargs'));
         $('#edit-input-job-month').val($button.data('job-month'));
         $('#edit-input-job-day-of-week').val($button.data('job-day-of-week'));
         $('#edit-input-job-day').val($button.data('job-day'));
         $('#edit-input-job-hour').val($button.data('job-hour'));
         $('#edit-input-job-minute').val($button.data('job-minute'));
         $('#edit-input-job-id').val(jobId);
-
+        $('#edit-input-job-task-args').val($button.attr('data-job-pubargs')); /* FIXME */
         var $checkbox = $('<input>', {
           type: 'checkbox',
           name: 'pause-resume-checkbox',
@@ -125,17 +108,10 @@ define(['utils',
         });
       }, this));
     },
-
-
-
-    /**
-     * Bind click event for edit-job modal.
-     */
     bindEditJobConfirmClickEvent: function() {
       var editConfirmButton = $('#edit-job-confirm-button').off('click');
       editConfirmButton.on('click', _.bind(function(e) {
         e.preventDefault();
-
         var jobId = $('#edit-input-job-id').val();
         var jobName = $('#edit-input-job-name').val();
         var jobTask = $('#edit-input-job-task-class').val();
@@ -144,13 +120,11 @@ define(['utils',
         var day = $('#edit-input-job-day').val();
         var hour = $('#edit-input-job-hour').val();
         var minute = $('#edit-input-job-minute').val();
-        var args = $('#edit-input-job-task-args').val();
-
+        var args = $('#edit-input-job-task-args').val(); /* FIXME */
         if (jobName.trim() === '') {
           utils.alertError('Please fill in job name');
           return;
         }
-
         if (jobTask.trim() === '') {
           utils.alertError('Please fill in job task class');
           return;
