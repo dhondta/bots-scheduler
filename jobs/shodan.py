@@ -7,11 +7,10 @@ from ._base import *
 class ShodanHostsCheckJob(JobBase):
     info = {
         'job_class_name': "Shodan - Hosts and open services check",
-        'notes': "This will perform a search on Shodan. You must specify an API key and a file with a list of IP "
-                 "addresses or networks (in CIDR notation) to check for.",
-        'arguments': [{'type': 'string', 'description': 'Shodan API key'},
-                      {'type': 'string', 'description': 'Path to the list of IP addresses or networks'}],
-        'example_arguments': '["API_KEY", "/path/to/ips.list"]',
+        'notes':          "This will perform a search on Shodan. You must specify an API key and a file with a list of "
+                          "IP addresses or networks (in CIDR notation) to check for.",
+        'arguments':      [{'type': 'string', 'description': 'Shodan API key'},
+                           {'type': 'file', 'description': 'Path to the list of IP addresses or networks'}],
     }
 
     @report

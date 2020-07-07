@@ -6,13 +6,14 @@ from ._base import *
 
 class CensysHostsCheckJob(JobBase):
     info = {
-        'job_class_name':    "Censys - Hosts and open ports check",
-        'notes': "This will perform a search on Censys. You must specify API credentials (ID and secret) and a file "
-                 "with a list of IP addresses or networks (in CIDR notation) to check for.",
-        'arguments': [{'type': 'string', 'description': 'Censys API identifier'},
-                      {'type': 'string', 'description': 'Censys API secret'},
-                      {'type': 'string', 'description': 'Path to the list of IP addresses or networks'}],
-        'example_arguments': '["API_ID", "API_secret", "/path/to/ips.list"]',
+        'job_class_name': "Censys - Hosts and open ports check",
+        'notes':          "This will perform a search on Censys. You must specify API credentials (ID and secret) and a"
+                          " file with a list of IP addresses or networks (in CIDR notation) to check for.",
+        'arguments':      [{'type': 'string', 'description': 'Censys API identifier'},
+                           {'type': 'string', 'description': 'Censys API secret'},
+                           {'type': 'file', 'description': 'Path to the list of IP addresses or networks'},
+                           {'type': 'bool', 'description': 'Test boolean'},
+                           {'type': 'range', 'description': 'Test range'}],
     }
 
     @report

@@ -6,11 +6,10 @@ from ._base import *
 
 class HaveIBeenSoldJob(JobBase):
     info = {
-        'job_class_name':    "Have I Been Sold - Emails check",
-        'notes':             "This will perform a search on HaveIBeenSold? against the provided file with a list of "
-                             "emails that could have been sold to third parties.",
-        'arguments':         [{'type': 'string', 'description': 'Path to the list of emails'}],
-        'example_arguments': '"path/to/emails.list" or ["path/to/list1", "path/to/list2", ...]',
+        'job_class_name': "Have I Been Sold - Emails check",
+        'notes':          "This will perform a search on HaveIBeenSold? against the provided file with a list of "
+                          "emails that could have been sold to third parties.",
+        'arguments':      [{'type': 'file', 'description': 'Path to the list of emails'}],
     }
 
     @report

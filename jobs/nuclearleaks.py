@@ -6,11 +6,10 @@ from ._base import *
 
 class NuclearLeaksJob(JobBase):
     info = {
-        'job_class_name':    "NuclearLeaks - Breached domains check",
-        'notes':             "This will perform a search on NuclearLeaks' list against the provided file with a list of"
-                             " emails or domains that could have been involved in data breaches.",
-        'arguments':         [{'type': 'string', 'description': 'Path to the list of emails and/or domains'}],
-        'example_arguments': '"path/to/emails_or_domains.list" or ["path/to/list1", "path/to/list2", ...]',
+        'job_class_name': "NuclearLeaks - Breached domains check",
+        'notes':          "This will perform a search on NuclearLeaks' list against the provided file with a list of"
+                          " emails or domains that could have been involved in data breaches.",
+        'arguments':      [{'type': 'file', 'description': 'Path to the list of emails and/or domains'}],
     }
 
     @report

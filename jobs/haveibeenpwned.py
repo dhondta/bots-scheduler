@@ -6,11 +6,10 @@ from ._base import *
 
 class HaveIBeenPwnedJob(JobBase):
     info = {
-        'job_class_name':    "Have I Been Pwned? - Breached domains check",
-        'notes':             "This will perform a search on HaveIBeenPwned? against the provided file with a list of "
-                             "emails or domains that could have been involved in recent data breaches.",
-        'arguments':         [{'type': 'string', 'description': 'Path to the list of emails and/or domains'}],
-        'example_arguments': '"path/to/emails_or_domains.list" or ["path/to/list1", "path/to/list2", ...]',
+        'job_class_name': "Have I Been Pwned? - Breached domains check",
+        'notes':          "This will perform a search on HaveIBeenPwned? against the provided file with a list of "
+                          "emails or domains that could have been involved in recent data breaches.",
+        'arguments':      [{'type': 'file', 'description': 'Path to the list of emails and/or domains'}],
     }
 
     @report
@@ -47,7 +46,7 @@ class PwnedPasswordsJob(JobBase):
         'notes':             "This will perform a search on HaveIBeenPwned? and its PwnedPasswords database against the"
                              " provided file with a list of passwords that could have been involved in recent data "
                              "breaches.",
-        'arguments':         [{'type': 'string', 'description': 'Path to the list of passwords'}],
+        'arguments':         [{'type': 'file', 'description': 'Path to the list of passwords'}],
         'example_arguments': '"path/to/passwords.list" or ["path/to/passwords1", "path/to/passwords2", ...]',
     }
 

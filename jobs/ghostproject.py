@@ -6,11 +6,10 @@ from ._base import *
 
 class GhostProjectJob(JobBase):
     info = {
-        'job_class_name':    "GhostProject - Emails check for known passwords",
-        'notes':             "This will perform a search on GhostProject against the provided file with a list of "
-                             "emails whose passwords may be publicly known.",
-        'arguments':         [{'type': 'string', 'description': 'Path to the list of emails'}],
-        'example_arguments': '"path/to/emails.list" or ["path/to/list1", "path/to/list2", ...]',
+        'job_class_name': "GhostProject - Emails check for known passwords",
+        'notes':          "This will perform a search on GhostProject against the provided file with a list of "
+                          "emails whose passwords may be publicly known.",
+        'arguments':      [{'type': 'file', 'description': 'Path to the list of emails'}],
     }
 
     @report
