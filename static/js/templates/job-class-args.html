@@ -1,0 +1,37 @@
+<% if (job.arguments.length > 0) { 
+    var i = 0; %>
+    <% _.forEach(job.arguments, function(argument) { 
+        i += 1; %>
+        <% if (argument.type == "string") { %>
+            <input type="text" class="form-control" placeholder="<%- argument.description %>" value="">
+        <% } else if (argument.type == "list") { %>
+            <input type="text" class="form-control" placeholder="<%- argument.description %>" value="" argtype="list">
+        <% } else if (argument.type == "bool") { %>
+            <span class="form-control">
+                <label for="" class="col-sm-4" required=""><%- argument.description %>:</label>
+                <div class="col-sm-8"><input type="checkbox"></div>
+            </span>
+        <% } else if (argument.type == "range") {
+            if (argument.min === undefined) {argument.min = 0} 
+            if (argument.max === undefined) {argument.max = 10} 
+            if (argument.step === undefined) {argument.step = 1} %>
+            <span class="form-control">
+                <label for="" class="col-sm-4" required=""><%- argument.description %>:</label>
+                <div id="job-arg<%- i %>-counter" class="col-sm-2"><%- argument.min %></div>
+                <div class="col-sm-6">
+                    <input id="job-arg<%- i %>" type="range" value="<%- argument.min %>"
+                           min="<%- argument.min %>"
+                           max="<%- argument.max %>"
+                           step="<%- argument.step %>"
+                           oninput="$('#job-arg<%- i %>-counter').html(this.value);"
+                           onchange="$('#job-arg<%- i %>-counter').html(this.value);">
+                </div>
+            </span>
+        <% } else if (argument.type == "file") { %>
+            <select class="form-control">
+                <option value="" disabled selected><%- argument.description %></option>
+                <% _.forEach(files, function(file) { %><option value="<%- file %>"><%- file %></option><% }); %>
+            </select>
+        <% } %>
+    <% }); %>
+<% } %>
