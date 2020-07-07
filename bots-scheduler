@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from multiprocessing import Process
 from tinyscript import *
 
 
@@ -24,159 +23,12 @@ DEFAULT_USERS = ["administrator:change-this"]
 LOG_FORMAT    = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 STATIC_PATH   = "static"
 VENV_NAME     = ".venv"
-VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler", "pybots"]
+VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler==0.3.0", "pybots"]
 
 
 def at_exit():
     if "static_path" in globals() and isinstance(static_path, ts.MirrorPath):
         static_path.unmirror()
-
-
-def run_proxy(namespace):
-    """ This function configures and starts a reverse authentication proxy.
-
-    :param namespace: options' namespace
-    """
-    _ = namespace
-    from mitmproxy import addons
-    from mitmproxy.master import Master
-    from mitmproxy.tools import cmdline
-    from mitmproxy.tools.main import run
-
-    class BlockHttp:
-        """ Ensure that HTTP cannot be used. """
-        def request(self, flow):
-            if not flow.client_conn.tls_established:
-                flow.reply.kill()
-
-    class SecureHeaders:
-        """ Add secure HTTP headers to each response. """
-        def response(self, flow):
-            flow.response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-            flow.response.headers['X-Content-Type-Options'] = "nosniff"
-            flow.response.headers['X-Frame-Options'] = "DENY"
-            flow.response.headers['X-XSS-Protection'] = "X-XSS-Protection: 1; mode=block"
-
-    class AuthMaster(Master):
-        def __init__(self, opts):
-            super().__init__(opts)
-            self.addons.add(*addons.default_addons())
-            self.addons.add(BlockHttp())
-            self.addons.add(SecureHeaders())
-    
-    # configure and run the reverse proxy
-    mitmlogger = logging.getLogger("mitmproxy.reverse.proxy")
-    logger.info("Starting the authentication proxy...")
-    # 1. set the IP according to the chosen mode
-    host = ["0.0.0.0", "127.0.0.1"][_.local or _.debug]
-    # 2. if no htpasswd file provided, create one with the DEFAULT_USERS
-    if not _.htpasswd:
-        mitmlogger.debug("Generating the htpasswd file...")
-        import bcrypt
-        _.htpasswd = ".htpasswd"
-        with open(_.htpasswd, 'wb') as f:
-            for user in DEFAULT_USERS:
-                username, password = user.split(":")
-                salt = bcrypt.gensalt()
-                f.write(b("%s:%s") % (b(username), bcrypt.hashpw(b(password), salt)))
-    # 3. setup the arguments for the proxy run function
-    args = "--listen-host %s -p %d --proxyauth @%s --mode reverse:http://localhost:%d/" % \
-           (host, _.port, _.htpasswd, _.port + 1)
-    if _.certificate:
-        args += " --certs %s" % _.certificate
-    # 4. now start the server as a separate process
-    mitmlogger.info("Running proxy at {}:{} ...".format(host, _.port))
-    p = Process(target=run, args=(AuthMaster, cmdline.mitmproxy, args.split()))
-    p.start()
-    mitmlogger.info("*** You can access scheduler web ui at https://{}:{} ***".format(host, _.port))
-    return p
-
-
-def run_server(namespace):
-    """ This function configures and starts a scheduling server.
-    
-    :param namespace: options' namespace
-    """
-    global static_path
-    static_path = None
-    _ = namespace
-    from ndscheduler import settings
-    from ndscheduler import utils as ndutils
-    from ndscheduler.server import handlers, server
-    # this modification prevents disabled jobs from being triggered by the scheduler
-    try:  # this applies the modification on the code from the GitHub repo
-        from ndscheduler.corescheduler.core.base import BaseScheduler
-    except ImportError:  # this applies the modification on the PyPi package
-        from ndscheduler.core.scheduler.base import SingletonScheduler as BaseScheduler
-        code.replace(BaseScheduler.run_job, "datastore = utils.get_datastore_instance()", """
-    datastore = utils.get_datastore_instance()
-    try:
-        if not utils.import_from_path(job_class_path).meta_info()['enabled']: return
-    except: pass""")
-    # this modification allows to define proxy job classes without catching these as valid templates in the WUI
-    code.replace(ndutils.get_all_available_jobs, "if issubclass(module_property, job.JobBase):",
-                 "if issubclass(module_property, job.JobBase) and len(module_property.__subclasses__()) == 0 and "
-                 "type(module_property) != job.JobBase and module_property.meta_info().get('enabled', True)"
-                 " and module_property.meta_info().get('job_class_name', 'New Job') != 'New Job':")
-    # this modification leverages the modification on utils.get_all_available_jobs to filter jobs at the scheduler level
-    try:  # this applies the modification on the code from the GitHub repo
-        from ndscheduler.corescheduler.scheduler_manager import SchedulerManager
-    except ImportError:  # this applies the modification on the PyPi package
-        from ndscheduler.core.scheduler_manager import SchedulerManager
-    code.replace(SchedulerManager.get_jobs, "return self.sched.get_jobs()", """
-    enabled_jobs = [j['job_class_string'] for j in utils.get_all_available_jobs()]
-    return [j for j in self.sched.get_jobs() if utils.get_job_name(j) in enabled_jobs]""")
-    # this modification leverages the modification on utils.get_all_available_jobs to filter executions
-    code.replace(handlers.executions.Handler._get_executions, "return executions", """
-    jobs = [j['job_class_string'] for j in utils.get_all_available_jobs()]
-    return {'executions': [e for e in executions['executions'] if e['job']['task_name'] in jobs]}
-    """)
-    # this modification leverages the modification on utils.get_all_available_jobs to filter audit logs
-    code.replace(handlers.audit_logs.Handler._get_logs,
-        "logs = self.datastore.get_audit_logs(time_range_start, time_range_end)", """
-    import json
-    from ndscheduler import utils
-    enabled_job_names = [j.name for j in self.scheduler_manager.get_jobs()]
-    enabled_jobs = [j['job_class_string'] for j in utils.get_all_available_jobs()]
-    logs_list = []
-    for log in self.datastore.get_audit_logs(time_range_start, time_range_end)['logs']:
-        try:
-            if json.loads(log['description'])['job_class_string'] in enabled_jobs:
-                logs_list.append(log)
-        except ValueError:
-            if log['job_name'] in enabled_job_names:
-                logs_list.append(log)
-    logs = {'logs': logs_list}""")
-    # configure and run the server
-    logger.info("Starting the scheduling server...")
-    # 1. base settings
-    settings.DEBUG = _.debug
-    settings.HTTP_ADDRESS = "127.0.0.1"
-    settings.HTTP_PORT = _.port + 1
-    settings.JOB_CLASS_PACKAGES = _.jobs
-    settings.TIMEZONE = _.timezone
-    # NB: SCHEDULER_CLASS is not handled
-    # 2. database settings
-    settings.DATABASE_CLASS = DB_NDS_BASE + _.dbms.capitalize()
-    c = configparser.ConfigParser()
-    c.read(_.db_config)
-    settings.DATABASE_CONFIG_DICT = dict(c[_.dbms])
-    settings.JOBS_TABLENAME = _.jobs_table
-    settings.EXECUTIONS_TABLENAME = _.executions_table
-    settings.AUDIT_LOGS_TABLENAME = _.logs_table
-    # 3. other settings
-    settings.THREAD_POOL_SIZE = _.tp_size
-    settings.JOB_MAX_INSTANCES = _.job_max
-    settings.JOB_COALESCE = _.job_coal
-    settings.JOB_MISFIRE_GRACE_SEC = _.job_misfire
-    settings.TORNADO_MAX_WORKERS = _.tworkers
-    # 4. layout settings
-    # settings.APP_INDEX_PAGE left as default (index.html)
-    static_path = ts.MirrorPath(STATIC_PATH, settings.STATIC_DIR_PATH)
-    settings.STATIC_DIR_PATH = settings.TEMPLATE_DIR_PATH = STATIC_PATH
-    # 5. now start the server with the tuned settings
-    logger.debug("Applied settings:\n{}".format(vars(settings)))
-    server.SchedulerServer.run()
 
 
 if __name__ == "__main__":
@@ -185,8 +37,9 @@ if __name__ == "__main__":
     run = sparsers.add_parser("run", help="run the server")
     # 1. base settings
     net = run.add_argument_group("base options")
-    net.add_argument("-d", "--debug", action="store_true", help="run the server in debug mode")
+    net.add_argument("--debug", action="store_true", help="run the server in debug mode")
     net.add_argument("-j", "--jobs", action="append", default=["jobs"], help="folder with jobs to be imported")
+    net.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
     net.add_argument("-l", "--local", action="store_true", help="force running the server locally")
     net.add_argument("-p", "--port", type=ts.port_number, default=8888, help="server's port number",
                      note="this will be the listening port of the proxy, this of the scheduler will be port+1")
@@ -195,9 +48,10 @@ if __name__ == "__main__":
     db.add_argument("--dbms", choices=["sqlite", "postgresql", "mysql"], default="sqlite",
                     help="database management system")
     db.add_argument("--db-config", default="db.conf", type=ts.file_exists, help="database INI configuration file")
-    db.add_argument("--executions-table", default="scheduler_execution", help="executions table name")
+    db.add_argument("--executions-table", default="scheduler_executions", help="executions table name")
     db.add_argument("--jobs-table", default="scheduler_jobs", help="jobs table name")
-    db.add_argument("--logs-table", default="scheduler_jobauditlog", help="logs table name")
+    db.add_argument("--datafiles-table", default="scheduler_datafiles", help="data files table name")
+    db.add_argument("--logs-table", default="scheduler_jobauditlogs", help="logs table name")
     # 3. APScheduler settings
     aps = run.add_argument_group("APScheduler options")
     aps.add_argument("--job-coalesce", dest="job_coal", action="store_false",
@@ -221,14 +75,25 @@ if __name__ == "__main__":
     initialize(noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
     logging.setLoggers("apscheduler.executors.default", "mitmproxy.reverse.proxy", "ndscheduler.core.scheduler_manager",
-                       "ndscheduler.job", "ndscheduler.server.server", "tornado.access")
+                       "ndscheduler.job", "ndscheduler.server.server", "numexpr.utils", "tornado.access")
+    # complete args namespace with additional settings from the constants above
+    args.db_nds_base   = DB_NDS_BASE
+    args.default_users = DEFAULT_USERS
+    args.static_path   = STATIC_PATH
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
         with VirtualEnv(".venv", VENV_REQS) as venv:
-            p = run_proxy(args)
+            from core import run_proxy, run_server
+            from ndscheduler import settings
+            logger.info("Starting the authentication proxy...")
+            if not args.local:
+                p = run_proxy(args)
+            logger.info("Starting the scheduling server...")
+            static_path = ts.MirrorPath(args.static_path, settings.STATIC_DIR_PATH)
             run_server(args)
-            p.join(5)
+            if not args.local:
+                p.join(5)
     else:
         if os.path.isfile(DB_SQLITE_DEF):
             os.remove(DB_SQLITE_DEF)
