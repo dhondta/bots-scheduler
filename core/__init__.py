@@ -1,5 +1,7 @@
 from ndscheduler import constants, utils
+from ndscheduler.core.scheduler_manager import SchedulerManager
 from ndscheduler.core.datastore.providers import base
+from ndscheduler.core.scheduler.base import SingletonScheduler
 from ndscheduler.server import handlers
 from tinyscript import code
 
@@ -19,11 +21,7 @@ constants.AUDIT_LOG_DICT[__fd] = "file deleted"
 
 
 # this modification prevents disabled jobs from being triggered by the scheduler
-try:  # this applies the modification on the code from the GitHub repo
-    from ndscheduler.corescheduler.core.base import BaseScheduler
-except ImportError:  # this applies the modification on the PyPi package
-    from ndscheduler.core.scheduler.base import SingletonScheduler as BaseScheduler
-    code.replace(BaseScheduler.run_job, "datastore = utils.get_datastore_instance()", """
+code.replace(SingletonScheduler.run_job, "datastore = utils.get_datastore_instance()", """
     datastore = utils.get_datastore_instance()
     try:
         if not utils.import_from_path(job_class_path).meta_info()['enabled']: return
@@ -36,10 +34,6 @@ code.replace(utils.get_all_available_jobs, "if issubclass(module_property, job.J
              " and module_property.meta_info().get('job_class_name', 'New Job') != 'New Job':")
 
 # this modification leverages the modification on utils.get_all_available_jobs to filter jobs at the scheduler level
-try:  # this applies the modification on the code from the GitHub repo
-    from ndscheduler.corescheduler.scheduler_manager import SchedulerManager
-except ImportError:  # this applies the modification on the PyPi package
-    from ndscheduler.core.scheduler_manager import SchedulerManager
 code.replace(SchedulerManager.get_jobs, "return self.sched.get_jobs()", """
     enabled_jobs = [j['job_class_string'] for j in utils.get_all_available_jobs()]
     return [j for j in self.sched.get_jobs() if utils.get_job_name(j) in enabled_jobs]""")
@@ -66,4 +60,15 @@ code.replace(handlers.audit_logs.Handler._get_logs,
             if log['job_name'] in enabled_job_names:
                 logs_list.append(log)
     logs = {'logs': logs_list}""")
+
+# this modification joins settings.DATA_BASE_DIR to arguments of type "file" just before running a job
+code.replace(SingletonScheduler.run_scheduler_job, "job_class.run_job(job_id, execution_id, *args, **kwargs)", """
+    newargs = []
+    for a1, a2 in zip(job_class.meta_info()['arguments'], args):
+        if a1['type'] == "file":
+            import os
+            a2 = os.path.join(settings.DATA_BASE_DIR, a2)
+        newargs.append(a2)
+    job_class.run_job(job_id, execution_id, *newargs, **kwargs)
+    """)
 
