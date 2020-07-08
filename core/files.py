@@ -128,7 +128,7 @@ class FilesHandler(BaseHandler):
         # Blocking operation.
         self.datastore.add_datafile(fn, descr)
         self.datastore.add_audit_log("main", "Data files", constants.AUDIT_LOG_FILE_ADDED, user=self.username,
-                                     description="Added data file '{}'".format(filename))
+                                     description="Added data file '{}'".format(fn))
         self.set_status(201)
         self.write({'file': fn})
 

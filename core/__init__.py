@@ -49,7 +49,7 @@ code.replace(handlers.audit_logs.Handler._get_logs,
     "logs = self.datastore.get_audit_logs(time_range_start, time_range_end)", """
     import json
     from ndscheduler import utils
-    enabled_job_names = [j.name for j in self.scheduler_manager.get_jobs()]
+    enabled_job_ids = [j.id for j in self.scheduler_manager.get_jobs()]
     enabled_jobs = [j['job_class_string'] for j in utils.get_all_available_jobs()]
     logs_list = []
     for log in self.datastore.get_audit_logs(time_range_start, time_range_end)['logs']:
@@ -57,7 +57,7 @@ code.replace(handlers.audit_logs.Handler._get_logs,
             if json.loads(log['description'])['job_class_string'] in enabled_jobs:
                 logs_list.append(log)
         except ValueError:
-            if log['job_name'] in enabled_job_names:
+            if log['job_id'] in enabled_job_ids:
                 logs_list.append(log)
     logs = {'logs': logs_list}""")
 
@@ -71,4 +71,10 @@ code.replace(SingletonScheduler.run_scheduler_job, "job_class.run_job(job_id, ex
         newargs.append(a2)
     job_class.run_job(job_id, execution_id, *newargs, **kwargs)
     """)
+
+# this modification adapts the default time ranges for API requests of executions and logs
+code.replace(handlers.executions.Handler._get_executions, "ten_minutes_ago = now - timedelta(minutes=10)",
+                                                          "ten_minutes_ago = now - timedelta(days=1)")
+code.replace(handlers.audit_logs.Handler._get_logs, "ten_minutes_ago = now - timedelta(minutes=10)",
+                                                    "ten_minutes_ago = now - timedelta(days=1)")
 
