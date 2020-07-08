@@ -4,7 +4,7 @@ from tinyscript import *
 
 __script__    = "BotsScheduler"
 __author__    = "Alexandre D'Hondt"
-__version__   = "1.1.2"
+__version__   = "1.2.0"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __reference__ = "https://github.com/Nextdoor/ndscheduler"
@@ -75,7 +75,8 @@ if __name__ == "__main__":
     initialize(noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
     logging.setLoggers("apscheduler.executors.default", "mitmproxy.reverse.proxy", "ndscheduler.core.scheduler_manager",
-                       "ndscheduler.job", "ndscheduler.server.server", "numexpr.utils", "tornado.access")
+                       "ndscheduler.core.scheduler.base", "ndscheduler.job", "ndscheduler.server.server",
+                       "numexpr.utils", "tornado.access", "tornado.application")
     # complete args namespace with additional settings from the constants above
     args.db_nds_base   = DB_NDS_BASE
     args.default_users = DEFAULT_USERS
