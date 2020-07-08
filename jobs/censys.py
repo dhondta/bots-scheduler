@@ -11,9 +11,7 @@ class CensysHostsCheckJob(JobBase):
                           " file with a list of IP addresses or networks (in CIDR notation) to check for.",
         'arguments':      [{'type': 'string', 'description': 'Censys API identifier'},
                            {'type': 'string', 'description': 'Censys API secret'},
-                           {'type': 'file', 'description': 'Path to the list of IP addresses or networks'},
-                           {'type': 'bool', 'description': 'Test boolean'},
-                           {'type': 'range', 'description': 'Test range'}],
+                           {'type': 'file', 'description': 'Path to the list of IP addresses or networks'}],
     }
 
     @report
