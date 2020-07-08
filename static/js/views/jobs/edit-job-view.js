@@ -5,7 +5,6 @@ require.config({
     'backbone': 'vendor/backbone',
     'bootstrap': 'vendor/bootstrap',
     'bootstrapswitch': 'vendor/bootstrap-switch',
-    'select2': 'vendor/select2',
     'utils': 'utils',
     'config': 'config',
     'text': 'vendor/text',
@@ -28,35 +27,12 @@ require.config({
 });
 
 define(['utils', 'config', 'text!edit-job-modal', 'text!job-class-notes', 'text!job-class-args', 'backbone',
-        'bootstrapswitch'], function(utils, EditJobModalHtml, JobClassNotesHtml, JobClassArgsHtml) {
+        'bootstrapswitch'], function(utils, config, EditJobModalHtml, JobClassNotesHtml, JobClassArgsHtml) {
   'use strict';
+  var jobAnchor;
   return Backbone.View.extend({
     initialize: function() {
       $('body').append(EditJobModalHtml);
-      var jobsMetaInfo = $.parseJSON($('#jobs-meta-info').html());
-      var data = [];
-      _.forEach(jobsMetaInfo, function(job) {
-        data.push({
-          id: job.job_class_string,
-          text: job.job_class_name,
-          job: job
-        })
-      });
-      var files;
-      $('#add-job-button').on('click', _.bind(function(e) {
-        files = [];
-        $.get(config.files_url, function(data) {
-          _.forEach(data.files, function(file) {
-            files.push(file.filename);
-          });
-        });
-      }, this));
-      $('#edit-input-job-task-class').select2({
-        data: data
-      }).on("select2-selecting", function(e) {
-        $('#edit-job-class-notes').html(_.template(JobClassNotesHtml)({job: e.choice.job}));
-        $('#input-job-task-args').html(_.template(JobClassArgsHtml)({job: e.choice.job, files: files}));
-      });
       this.bindEditJobConfirmClickEvent();
       this.bindDeleteJobConfirmClickEvent();
       this.bindModalPopupEvent();
@@ -74,18 +50,37 @@ define(['utils', 'config', 'text!edit-job-modal', 'text!job-class-notes', 'text!
     },
     bindModalPopupEvent: function() {
       $('#edit-job-modal').on('show.bs.modal', _.bind(function(e) {
+        var jobsMetaInfo = $.parseJSON($('#jobs-meta-info').html());
+        var data = [];
+        _.forEach(jobsMetaInfo, function(job) {
+          data.push({
+            id: job.job_class_string,
+            text: job.job_class_name,
+            job: job
+          })
+        });
         var $button = $(e.relatedTarget);
+        jobAnchor = $button;
         var jobId = $button.data('id');
         var jobActive = $button.data('job-active');
         $('#edit-input-job-name').val($button.data('job-name'));
-        $('#edit-input-job-task-class').val($button.data('job-task')).trigger('change');
         $('#edit-input-job-month').val($button.data('job-month'));
         $('#edit-input-job-day-of-week').val($button.data('job-day-of-week'));
         $('#edit-input-job-day').val($button.data('job-day'));
         $('#edit-input-job-hour').val($button.data('job-hour'));
         $('#edit-input-job-minute').val($button.data('job-minute'));
         $('#edit-input-job-id').val(jobId);
-        $('#edit-input-job-task-args').val($button.attr('data-job-pubargs')); /* FIXME */
+        // get the job object matching the given class and populate notes and arguments
+        var job = data.find(obj => { return obj.id === $button.data('job-task') });
+        $('#edit-input-job-task-class').val(job.text);
+        $('#edit-job-class-notes').html(_.template(JobClassNotesHtml)({
+          job: job.job
+        }));
+        $('#edit-input-job-task-args').html(_.template(JobClassArgsHtml)({
+          job: job.job,
+          files: config.files_list,
+          data: JSON.parse($button.attr('data-job-pubargs'))
+        }));
         var $checkbox = $('<input>', {
           type: 'checkbox',
           name: 'pause-resume-checkbox',
@@ -120,7 +115,7 @@ define(['utils', 'config', 'text!edit-job-modal', 'text!job-class-notes', 'text!
         var day = $('#edit-input-job-day').val();
         var hour = $('#edit-input-job-hour').val();
         var minute = $('#edit-input-job-minute').val();
-        var args = $('#edit-input-job-task-args').val(); /* FIXME */
+        var args = $('#edit-input-job-task-args').find(':input');
         if (jobName.trim() === '') {
           utils.alertError('Please fill in job name');
           return;
@@ -129,26 +124,39 @@ define(['utils', 'config', 'text!edit-job-modal', 'text!job-class-notes', 'text!
           utils.alertError('Please fill in job task class');
           return;
         }
-
         // In order to pass space via command line arguments, we replace space
         // with $, and replace $ back to space. So, '$' is reserved and can't
         // be used in user input.
         if (jobName.indexOf('$') != -1 ||
-            jobTask.indexOf('$') != -1 ||
-            args.indexOf('$') != -1) {
+            jobTask.indexOf('$') != -1) {
           utils.alertError('You cannot use "$". Please remove it.');
           return;
         }
-
-        var taskArgs = undefined;
-        try {
-          taskArgs = utils.getTaskArgs(args);
-        } catch (err) {
-          utils.alertError('Invalid Arguments. Should be valid JSON string,' +
-              ' e.g., [1, 2, "hello"].');
-          return;
+        var taskArgs = [];
+        if (args.length == 1 && args[0].attributes.argtype.value == "list") {
+          try {
+            taskArgs = utils.getTaskArgs(args[0].value);
+          } catch (err) {
+            utils.alertError('Invalid Arguments. Should be valid JSON string, e.g. [1, 2, "test"].');
+            return;
+          }
+        } else {
+          _.forEach(args, function(arg) {
+            if (arg.attributes.argtype.value == "list") {
+              try {
+                arg.value = utils.getTaskArgs(arg.value);
+              } catch (err) {
+                utils.alertError('Invalid Arguments. Should be valid JSON string, e.g. [1, 2, "test"].');
+                return;
+              }
+            } else if (arg.attributes.argtype.value == "bool") {
+              arg.value = arg.is(":checked");
+            } else if (arg.attributes.argtype.value == "range") {
+              arg.value = parseInt(arg.value, 10);
+            }
+            taskArgs.push(arg.value);
+          });
         }
-
         // TODO (wenbin): more checking for cron string
         this.collection.modifyJob(jobId, {
           job_class_string: jobTask,
@@ -160,8 +168,11 @@ define(['utils', 'config', 'text!edit-job-modal', 'text!job-class-notes', 'text!
           hour: hour,
           minute: minute
         });
-
+        jobAnchor.attr('title', jobTask+"("+JSON.stringify(taskArgs)+")");
+        jobAnchor.attr('data-job-name', jobName);
+        jobAnchor.attr('data-job-pubargs', JSON.stringify(taskArgs));
         $('#edit-job-modal').modal('hide');
+        this.collection.trigger('reset');
       }, this));
     }
   });

@@ -42,21 +42,29 @@ define(['utils', 'config', 'text!add-job-modal', 'text!job-class-notes', 'text!j
           job: job
         })
       });
-      var files;
       $('#add-job-button').on('click', _.bind(function(e) {
-        files = [];
-        $.get(config.files_url, function(data) {
-          _.forEach(data.files, function(file) {
-            files.push(file.filename);
-          });
+        // reset modal elements
+        $('#input-job-task-class').select2({
+          placeholder: "Please select a job",
+          data: data
         });
+        $("#input-job-name").val("");
+        $("#input-job-task-class").select2("val", "");
+        $('#input-job-task-args').html("Please select a job class first");
+        $('#add-job-class-notes').html("");
       }, this));
       $('#input-job-task-class').select2({
         placeholder: "Please select a job",
         data: data
       }).on("select2-selecting", function(e) {
-        $('#add-job-class-notes').html(_.template(JobClassNotesHtml)({job: e.choice.job}));
-        $('#input-job-task-args').html(_.template(JobClassArgsHtml)({job: e.choice.job, files: files}));
+        $('#add-job-class-notes').html(_.template(JobClassNotesHtml)({
+          job: e.choice.job
+        }));
+        $('#input-job-task-args').html(_.template(JobClassArgsHtml)({
+          job: e.choice.job,
+          files: config.files_list,
+          data: []
+        }));
       });
     },
     bindAddJobConfirmClickEvent: function() {
@@ -81,8 +89,7 @@ define(['utils', 'config', 'text!add-job-modal', 'text!job-class-notes', 'text!j
         // In order to pass space via command line arguments, we replace space
         // with $, and replace $ back to space. So, '$' is reserved and can't
         // be used in user input.
-        if (jobName.indexOf('$') != -1 ||
-            jobTask.indexOf('$') != -1) {
+        if (jobName.indexOf('$') != -1 || jobTask.indexOf('$') != -1) {
           utils.alertError('You cannot use "$". Please remove it.');
           return;
         }
@@ -91,16 +98,17 @@ define(['utils', 'config', 'text!add-job-modal', 'text!job-class-notes', 'text!j
           try {
             taskArgs = utils.getTaskArgs(args[0].value);
           } catch (err) {
-            utils.alertError('Invalid Arguments. Should be valid JSON string, e.g., [1, 2, "test"].');
+            utils.alertError('Invalid Arguments. Should be valid JSON string, e.g. [1, 2, "test"].');
             return;
           }
         } else {
+          var error = false;
           _.forEach(args, function(arg) {
             if (arg.attributes.argtype.value == "list") {
               try {
                 arg.value = utils.getTaskArgs(arg.value);
               } catch (err) {
-                utils.alertError('Invalid Arguments. Should be valid JSON string, e.g., [1, 2, "test"].');
+                utils.alertError('Invalid Arguments. Should be valid JSON string, e.g. [1, 2, "test"].');
                 return;
               }
             } else if (arg.attributes.argtype.value == "bool") {
@@ -108,9 +116,15 @@ define(['utils', 'config', 'text!add-job-modal', 'text!job-class-notes', 'text!j
             } else if (arg.attributes.argtype.value == "range") {
               arg.value = parseInt(arg.value, 10);
             }
+            if (!$.trim(arg.value)) {
+              var descr = arg.attributes.placeholder.value;
+              utils.alertError('Please fill in a '+descr[0].toLowerCase()+descr.slice(1));
+              error = true;
+            }
             taskArgs.push(arg.value);
           });
         }
+        if (error) return;
         this.collection.addJob({
           job_class_string: jobTask,
           name: jobName,

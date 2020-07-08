@@ -24,12 +24,18 @@ require.config({
 define(['add-file-view', 'files-filter-view', 'files-stats-view', 'files-table-view',
         'backbone', 'bootstrap'], function(AddFileView, FilesFilterView, FilesStatsView, FilesTableView) {
   'use strict';
+  var filesCollection;
   return Backbone.View.extend({
     initialize: function() {
-      new AddFileView({collection: this.collection});
+      filesCollection = this.collection;
+      var add_file_view = new AddFileView({collection: this.collection});
       new FilesFilterView({collection: this.collection});
       new FilesStatsView({collection: this.collection});
-      new FilesTableView({collection: this.collection});
+      new FilesTableView({collection: this.collection, add_file_view: add_file_view});
+      $(document).ready(function() {
+        var pageURL = $(location).attr("href").split("/");
+        if (pageURL[pageURL.length-1] != "#files") {filesCollection.getFiles();}
+      });
     }
   });
 });

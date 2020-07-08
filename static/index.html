@@ -21,8 +21,7 @@
 
     <script>
         var DEFAULT_CACHE_BUSTER = (new Date()).getTime();
-        // DEFAULT_CACHE_BUSTER will be replaced with a release token by the
-        // build script. cacheBuster is used by requirejs.
+        // DEFAULT_CACHE_BUSTER will be replaced with a release token by the build script. cacheBuster is used by requirejs.
         cacheBuster = DEFAULT_CACHE_BUSTER;
     </script>
 </head>
@@ -87,7 +86,7 @@
                     <div class="form-group">
                         <select class="form-control" id="filter-time-range">
                             <option value="3600">1 hour</option>
-                            <option value="86400">1 day</option>
+                            <option value="86400" selected>1 day</option>
                             <option value="604800">1 week</option>
                             <option value="2592000">1 month</option>
                         </select>
@@ -123,7 +122,7 @@
                             <option value="3600">1 hour</option>
                             <option value="86400">1 day</option>
                             <option value="604800">1 week</option>
-                            <option value="2592000">1 month</option>
+                            <option value="2592000" selected>1 month</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -143,10 +142,10 @@
                 <div id="logs-page-sidebar" style="display:none">
                     <div class="form-group">
                         <select class="form-control" id="logs-filter-time-range">
-                            <option value="3600">1 hour</option>
-                            <option value="86400">1 day</option>
+                            <option value="86400" selected>1 day</option>
                             <option value="604800">1 week</option>
                             <option value="2592000">1 month</option>
+                            <option value="15552000">6 months</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -205,6 +204,7 @@
                         <table class="table table-striped" id="files-table">
                             <thead>
                             <tr>
+                                <th></th>
                                 <th>File</th>
                                 <th>Created At (local)</th>
                                 <th>Entries</th>

@@ -54,7 +54,7 @@ define(['utils',
         'order': [[3, 'desc']],
         // Disable sorting on result column
         "columnDefs": [
-          { "orderable": false, "className": "table-result-column", "targets": 5 }
+          { "orderable": false, "className": "table-result-column", "width": "20px", "targets": 5 }
         ]
       });
     },
