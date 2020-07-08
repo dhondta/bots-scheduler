@@ -42,12 +42,10 @@ class HaveIBeenPwnedJob(JobBase):
 
 class PwnedPasswordsJob(JobBase):
     info = {
-        'job_class_name':    "Have I Been Pwned? - Pwned passwords check",
-        'notes':             "This will perform a search on HaveIBeenPwned? and its PwnedPasswords database against the"
-                             " provided file with a list of passwords that could have been involved in recent data "
-                             "breaches.",
-        'arguments':         [{'type': 'file', 'description': 'Path to the list of passwords'}],
-        'example_arguments': '"path/to/passwords.list" or ["path/to/passwords1", "path/to/passwords2", ...]',
+        'job_class_name': "Have I Been Pwned? - Pwned passwords check",
+        'notes':          "This will perform a search in the PwnedPasswords database on HaveIBeenPwned? against the "
+                          "given passwords file for checking if they could have been involved in recent data breaches.",
+        'arguments':      [{'type': 'file', 'description': 'Path to the list of passwords'}],
     }
 
     @report
