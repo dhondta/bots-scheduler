@@ -19,6 +19,6 @@ datastore.db
 *.crt
 *.pem
 example-jobs/
-htpasswd
-.htpasswd
+ht*
+.ht*
 geckodriver.log
