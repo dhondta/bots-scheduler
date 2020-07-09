@@ -1,7 +1,6 @@
 """A job to run a search on emails or domains using HaveIBeenPwned?."""
+from botscheduler import *
 from pybots import HaveIBeenPwnedBot, PwnedPasswordsBot
-
-from ._base import *
 
 
 class HaveIBeenPwnedJob(JobBase):

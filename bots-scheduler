@@ -45,12 +45,12 @@ if __name__ == "__main__":
                      note="this will be the listening port of the proxy, this of the scheduler will be port+1")
     # 2. database settings
     db = run.add_argument_group("database options")
-    db.add_argument("--dbms", choices=["sqlite", "postgresql", "mysql"], default="sqlite",
+    db.add_argument("--dbms", default="sqlite", choices=["sqlite", "postgresql", "mysql"],
                     help="database management system")
     db.add_argument("--db-config", default="db.conf", type=ts.file_exists, help="database INI configuration file")
     db.add_argument("--executions-table", default="scheduler_executions", help="executions table name")
     db.add_argument("--jobs-table", default="scheduler_jobs", help="jobs table name")
-    db.add_argument("--datafiles-table", default="scheduler_datafiles", help="data files table name")
+    db.add_argument("--files-table", default="scheduler_files", help="data files table name")
     db.add_argument("--logs-table", default="scheduler_jobauditlogs", help="logs table name")
     # 3. APScheduler settings
     aps = run.add_argument_group("APScheduler options")
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # 4. Tornado settings
     tornado = run.add_argument_group("Tornado options")
     tornado.add_argument("--max-workers", dest="tworkers", type=ts.pos_int, default=8, help="Maximum number of workers")
-    # 5. Proxy settings
+    # 5. proxy settings
     proxy = run.add_argument_group("Mitmproxy options")
     proxy.add_argument("--certificate", type=ts.file_exists, help="TLS private certificate file",
                        note="if None, the default certificate of mitmproxy is used")
@@ -85,8 +85,9 @@ if __name__ == "__main__":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
         with VirtualEnv(".venv", VENV_REQS) as venv:
-            from core import run_proxy, run_server
+            from core import base, run_proxy, run_server
             from ndscheduler import settings
+            sys.modules['botscheduler'] = base
             logger.info("Starting the authentication proxy...")
             if not args.local:
                 p = run_proxy(args)

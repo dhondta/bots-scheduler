@@ -1,7 +1,6 @@
 """A job to run a search against the list of data breaches of NuclearLeaks."""
+from botscheduler import *
 from pybots import NuclearLeaksBot
-
-from ._base import *
 
 
 class NuclearLeaksJob(JobBase):

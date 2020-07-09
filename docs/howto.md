@@ -14,18 +14,7 @@ The plugin architecture of this project relies on the jobs folder(s), configurab
 $ ./bots-scheduler run [...] --jobs my-jobs-folder --jobs my-other-jobs-folder
 ```
 
-## Jobs folder
-
-A folder with job class definitions is structured as follows:
-
-```
-jobs/
-+-- __init__.py
-+-- _base.py
-+-- ... (custom job files)
-```
-
-In this project, the API for job class' definition is slightly enhanced regarding [NdScheduler](https://github.com/Nextdoor/ndscheduler) for the sake of simplicity. This is reflected in `_base.py`, hence this file must be copied into a new folder with job class definitions (unless you want to use `ndscheduler.job.JobBase` directly).
+A folder can contain job class definitions in Python modules that will be dynamically loaded. The API for job class' definition is slightly enhanced regarding this of [NdScheduler](https://github.com/Nextdoor/ndscheduler), for the sake of simplicity.
 
 ## Job class template
 
@@ -34,7 +23,7 @@ On the contrary of [NdScheduler](https://github.com/Nextdoor/ndscheduler), in th
 The following snippet shows a job class template:
 
 ```python
-from ._base import *
+from botscheduler import *
 
 class TestJob(JobBase):
     info = {
@@ -55,7 +44,7 @@ class TestJob(JobBase):
 
 In this template, we notice:
 
-- The wildcard import from `_base.py`, required for the `JobBase` and report object classes.
+- The wildcard import from `botscheduler`, required for the `JobBase`, particular decorators and report object classes.
 - The job metadata in the `info` dictionary, holding job's information for display in the WUI.
 - The `run` method, decorated with the `report` decorator, returning a list of report objects.
 

@@ -1,7 +1,6 @@
 """A job to run a Shodan search."""
+from botscheduler import *
 from pybots import ShodanBot
-
-from ._base import *
 
 
 class ShodanHostsCheckJob(JobBase):

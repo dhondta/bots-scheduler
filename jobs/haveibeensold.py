@@ -1,7 +1,6 @@
 """A job to run a search on sold email using HaveIBeenSold."""
+from botscheduler import *
 from pybots import HaveIBeenSoldBot
-
-from ._base import *
 
 
 class HaveIBeenSoldJob(JobBase):

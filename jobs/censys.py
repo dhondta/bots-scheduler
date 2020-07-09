@@ -1,7 +1,6 @@
 """A job to run a Censys search."""
+from botscheduler import *
 from pybots import CensysBot
-
-from ._base import *
 
 
 class CensysHostsCheckJob(JobBase):

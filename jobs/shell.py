@@ -1,8 +1,7 @@
 """A job to run executable programs."""
 import codecs
+from botscheduler import *
 from subprocess import check_output, PIPE
-
-from ._base import *
 
 
 class ShellCommand(JobBase):
