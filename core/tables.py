@@ -4,7 +4,7 @@ from ndscheduler.core.datastore import tables
 
 
 tables.DATAFILES = sqlalchemy.Table(
-    settings.DATAFILES_TABLENAME, tables.METADATA,
+    settings.FILES_TABLENAME, tables.METADATA,
     sqlalchemy.Column('filename', sqlalchemy.Text, nullable=False, primary_key=True),
     sqlalchemy.Column('user', sqlalchemy.Text, nullable=True),
     sqlalchemy.Column('created_time', sqlalchemy.DateTime(timezone=True), nullable=False,

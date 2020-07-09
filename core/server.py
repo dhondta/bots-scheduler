@@ -58,7 +58,7 @@ def run_server(namespace):
     settings.DATABASE_CONFIG_DICT = dict(c[_.dbms])
     settings.JOBS_TABLENAME = _.jobs_table
     settings.EXECUTIONS_TABLENAME = _.executions_table
-    settings.DATAFILES_TABLENAME = _.datafiles_table
+    settings.FILES_TABLENAME = _.files_table
     settings.AUDIT_LOGS_TABLENAME = _.logs_table
     # 3. other settings
     settings.THREAD_POOL_SIZE = _.tp_size

@@ -1,6 +1,5 @@
 from ndscheduler import constants, utils
 from ndscheduler.core.scheduler_manager import SchedulerManager
-from ndscheduler.core.datastore.providers import base
 from ndscheduler.core.scheduler.base import SingletonScheduler
 from ndscheduler.server import handlers
 from tinyscript import code
@@ -12,7 +11,7 @@ from .server import run_server
 # monkey-patch constants
 constants.DEFAULT_JOBS_TABLENAME = 'scheduler_jobs'
 constants.DEFAULT_EXECUTIONS_TABLENAME = 'scheduler_executions'
-constants.DEFAULT_DATAFILES_TABLENAME = 'scheduler_datafiles'
+constants.DEFAULT_FILES_TABLENAME = 'scheduler_files'
 constants.DEFAULT_AUDIT_LOGS_TABLENAME = 'scheduler_jobauditlogs'
 constants.AUDIT_LOG_FILE_ADDED = __fa = 6
 constants.AUDIT_LOG_DICT[__fa] = "file added"
