@@ -16,9 +16,11 @@ tmp
 TODO
 datastore.db
 *.conf
+*.ini
+conf/*.conf
+conf/*.ini
 *.crt
 *.pem
-example-jobs/
 ht*
 .ht*
 geckodriver.log

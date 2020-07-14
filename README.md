@@ -12,6 +12,9 @@ This application is a scheduling system based on [Nextdoor Scheduler](https://gi
 ```sh
 $ git clone https://github.com/dhondta/bots-scheduler.git
 $ cd bots-scheduler
+$ mv db.ini.template db.ini
+$ mv smtp.ini.template smtp.ini
+<<< adapt db.ini and smtp.ini >>>
 ```
 
 ## Demonstrations
@@ -28,7 +31,7 @@ $ cd bots-scheduler
 
 ```sh
 $ ./bots-scheduler --help
-BotsScheduler 1.1.2
+BotsScheduler 1.2.0
 Author   : Alexandre D'Hondt
 Copyright: © 2020 A. D'Hondt
 License  : GNU Affero General Public License v3.0
@@ -60,7 +63,7 @@ This help shows 2 commands:
 2. `clean`: for cleaning the virtual environment
 
 ```sh
-BotsScheduler 1.1.2
+BotsScheduler 1.2.0
 Author   : Alexandre D'Hondt
 Copyright: © 2020 A. D'Hondt
 License  : GNU Affero General Public License v3.0
@@ -71,17 +74,20 @@ This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on r
  (https://github.com/dhondta/python-pybots).
 Moreover, it provides authentication through the use of an integrated reverse proxy.
 
-usage: ./bots-scheduler run [-h] [--help] [-d] [-j JOBS] [-l] [-p PORT]
-                            [--dbms {sqlite,postgresql,mysql}]
+usage: ./bots-scheduler run [-h] [--help] [--debug] [-j JOBS] [-d DATA_DIR]
+                            [-l] [-p PORT] [--dbms {sqlite,postgresql,mysql}]
                             [--db-config DB_CONFIG]
                             [--executions-table EXECUTIONS_TABLE]
                             [--jobs-table JOBS_TABLE]
+                            [--files-table FILES_TABLE]
                             [--logs-table LOGS_TABLE] [--job-coalesce]
                             [--job-max-instances JOB_MAX]
                             [--job-misfire JOB_MISFIRE]
                             [--threadpool-size TP_SIZE] [--timezone TIMEZONE]
                             [--max-workers TWORKERS]
                             [--certificate CERTIFICATE] [--htpasswd HTPASSWD]
+                            [--smtp-config SMTP_CONFIG]
+                            [--recipient [RECIPIENT [RECIPIENT ...]]]
 
 
 
@@ -90,23 +96,33 @@ extra arguments:
   --help  show this help message and exit
 
 base options:
-  -d, --debug           run the server in debug mode (default: False)
+  --debug               run the server in debug mode (default: False)
   -j JOBS, --jobs JOBS  folder with jobs to be imported (default: ['jobs'])
+  -d DATA_DIR, --data-dir DATA_DIR
+                        folder with the data files to be used (default: data)
   -l, --local           force running the server locally (default: False)
   -p PORT, --port PORT  server's port number (default: 8888)
                          NB: this will be the listening port of the proxy, this of the scheduler will be port+1
+
+notification options:
+  --smtp-config SMTP_CONFIG
+                        SMTP INI configuration file (default: smtp.ini)
+  --recipient [RECIPIENT [RECIPIENT ...]]
+                        notification recipient's email address (default: None)
 
 database options:
   --dbms {sqlite,postgresql,mysql}
                         database management system (default: sqlite)
   --db-config DB_CONFIG
-                        database INI configuration file (default: db.conf)
+                        database INI configuration file (default: db.ini)
   --executions-table EXECUTIONS_TABLE
-                        executions table name (default: scheduler_execution)
+                        executions table name (default: scheduler_executions)
   --jobs-table JOBS_TABLE
                         jobs table name (default: scheduler_jobs)
+  --files-table FILES_TABLE
+                        data files table name (default: scheduler_files)
   --logs-table LOGS_TABLE
-                        logs table name (default: scheduler_jobauditlog)
+                        logs table name (default: scheduler_jobauditlogs)
 
 APScheduler options:
   --job-coalesce        Coalesce missed executions of a job (default: True)

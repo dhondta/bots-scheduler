@@ -43,16 +43,21 @@ if __name__ == "__main__":
     net.add_argument("-l", "--local", action="store_true", help="force running the server locally")
     net.add_argument("-p", "--port", type=ts.port_number, default=8888, help="server's port number",
                      note="this will be the listening port of the proxy, this of the scheduler will be port+1")
-    # 2. database settings
+    # 2. notification settings
+    notify = run.add_argument_group("notification options")
+    notify.add_argument("--smtp-config", default="conf/smtp.ini", type=ts.file_exists,
+                        help="SMTP INI configuration file")
+    notify.add_argument("--mail-profile", nargs="*", help="SMTP profile to be selected from the configuration file")
+    # 3. database settings
     db = run.add_argument_group("database options")
     db.add_argument("--dbms", default="sqlite", choices=["sqlite", "postgresql", "mysql"],
                     help="database management system")
-    db.add_argument("--db-config", default="db.conf", type=ts.file_exists, help="database INI configuration file")
+    db.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="database INI configuration file")
     db.add_argument("--executions-table", default="scheduler_executions", help="executions table name")
     db.add_argument("--jobs-table", default="scheduler_jobs", help="jobs table name")
     db.add_argument("--files-table", default="scheduler_files", help="data files table name")
     db.add_argument("--logs-table", default="scheduler_jobauditlogs", help="logs table name")
-    # 3. APScheduler settings
+    # 4. APScheduler settings
     aps = run.add_argument_group("APScheduler options")
     aps.add_argument("--job-coalesce", dest="job_coal", action="store_false",
                      help="Coalesce missed executions of a job")
@@ -61,10 +66,10 @@ if __name__ == "__main__":
     aps.add_argument("--job-misfire", dest="job_misfire", default=3600, help="Job misfire grace time in seconds")
     aps.add_argument("--threadpool-size", dest="tp_size", type=ts.pos_int, default=2, help="Threadpool size")
     aps.add_argument("--timezone", default="UTC", help="server's timezone")
-    # 4. Tornado settings
+    # 5. Tornado settings
     tornado = run.add_argument_group("Tornado options")
     tornado.add_argument("--max-workers", dest="tworkers", type=ts.pos_int, default=8, help="Maximum number of workers")
-    # 5. proxy settings
+    # 6. proxy settings
     proxy = run.add_argument_group("Mitmproxy options")
     proxy.add_argument("--certificate", type=ts.file_exists, help="TLS private certificate file",
                        note="if None, the default certificate of mitmproxy is used")
@@ -87,6 +92,7 @@ if __name__ == "__main__":
         with VirtualEnv(".venv", VENV_REQS) as venv:
             from core import base, run_proxy, run_server
             from ndscheduler import settings
+            base._load_mail_config(args.smtp_config, *args.mail_profile)
             sys.modules['botscheduler'] = base
             logger.info("Starting the authentication proxy...")
             if not args.local:

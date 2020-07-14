@@ -1,0 +1,24 @@
+[profile1]
+hostname = localhost
+port     = 25
+user     = changeme
+password = changeme
+from     = changeme@mydomain.com
+to       = changeme@mydomain.com
+
+[profile2]
+hostname = localhost
+port     = 465
+user     = changeme
+password = changeme
+from     = changeme@mydomain.com
+to       = changeme@mydomain.com
+
+[profile3]
+hostname = localhost
+port     = 587
+user     = changeme
+password = changeme
+from     = changeme@mydomain.com
+to       = changeme@mydomain.com
+
