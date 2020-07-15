@@ -12,9 +12,8 @@ This application is a scheduling system based on [Nextdoor Scheduler](https://gi
 ```sh
 $ git clone https://github.com/dhondta/bots-scheduler.git
 $ cd bots-scheduler
-$ mv db.ini.template db.ini
-$ mv smtp.ini.template smtp.ini
-<<< adapt db.ini and smtp.ini >>>
+$ ./bots-scheduler reset
+<<< adapt conf/db.ini and conf/smtp.ini >>>
 ```
 
 ## Demonstrations
@@ -31,7 +30,7 @@ $ mv smtp.ini.template smtp.ini
 
 ```sh
 $ ./bots-scheduler --help
-BotsScheduler 1.2.0
+BotsScheduler 1.2.1
 Author   : Alexandre D'Hondt
 Copyright: © 2020 A. D'Hondt
 License  : GNU Affero General Public License v3.0
@@ -42,12 +41,13 @@ This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on r
  (https://github.com/dhondta/python-pybots).
 Moreover, it provides authentication through the use of an integrated reverse proxy.
 
-usage: ./bots-scheduler [-h] [--help] [-v] {run,clean} ...
+usage: ./bots-scheduler [-h] [--help] [-v] {run,clean,reset} ...
 
 positional arguments:
-  {run,clean}  command to be executed
-    run        run the server
-    clean      remove server's virtual environment
+  {run,clean,reset}  command to be executed
+    run              run the server
+    clean            clean server artifacts
+    reset            clean server artifacts and reset server
 
 
 extra arguments:
@@ -57,13 +57,15 @@ extra arguments:
 
 ```
 
-This help shows 2 commands:
+This help shows 3 commands:
 
 1. `run`: for running the application
-2. `clean`: for cleaning the virtual environment
+2. `clean`: for cleaning the data files and the local datastore database file (SQLite)
+3. `reset`: for cleaning the data files, the local datastore database file (SQLite) and the virtual environment and preparing the config files from templates
 
 ```sh
-BotsScheduler 1.2.0
+$ ./bots-scheduler run --help
+BotsScheduler 1.2.1
 Author   : Alexandre D'Hondt
 Copyright: © 2020 A. D'Hondt
 License  : GNU Affero General Public License v3.0
@@ -75,8 +77,9 @@ This tool is a launcher for the Nextdoor Scheduler with a set of jobs based on r
 Moreover, it provides authentication through the use of an integrated reverse proxy.
 
 usage: ./bots-scheduler run [-h] [--help] [--debug] [-j JOBS] [-d DATA_DIR]
-                            [-l] [-p PORT] [--dbms {sqlite,postgresql,mysql}]
-                            [--db-config DB_CONFIG]
+                            [-l] [-p PORT] [--smtp-config SMTP_CONFIG]
+                            [--smtp-profile [SMTP_PROFILE [SMTP_PROFILE ...]]]
+                            [--db-config DB_CONFIG] [--db-profile DB_PROFILE]
                             [--executions-table EXECUTIONS_TABLE]
                             [--jobs-table JOBS_TABLE]
                             [--files-table FILES_TABLE]
@@ -86,8 +89,6 @@ usage: ./bots-scheduler run [-h] [--help] [--debug] [-j JOBS] [-d DATA_DIR]
                             [--threadpool-size TP_SIZE] [--timezone TIMEZONE]
                             [--max-workers TWORKERS]
                             [--certificate CERTIFICATE] [--htpasswd HTPASSWD]
-                            [--smtp-config SMTP_CONFIG]
-                            [--recipient [RECIPIENT [RECIPIENT ...]]]
 
 
 
@@ -106,15 +107,15 @@ base options:
 
 notification options:
   --smtp-config SMTP_CONFIG
-                        SMTP INI configuration file (default: smtp.ini)
-  --recipient [RECIPIENT [RECIPIENT ...]]
-                        notification recipient's email address (default: None)
+                        SMTP INI configuration file (default: conf/smtp.ini)
+  --smtp-profile [SMTP_PROFILE [SMTP_PROFILE ...]]
+                        SMTP profile to be selected from the configuration file (default: None)
 
 database options:
-  --dbms {sqlite,postgresql,mysql}
-                        database management system (default: sqlite)
   --db-config DB_CONFIG
-                        database INI configuration file (default: db.ini)
+                        database INI configuration file (default: conf/db.ini)
+  --db-profile DB_PROFILE
+                        DB profile to be selected from the configuration file (default: sqlite)
   --executions-table EXECUTIONS_TABLE
                         executions table name (default: scheduler_executions)
   --jobs-table JOBS_TABLE

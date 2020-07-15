@@ -41,34 +41,38 @@ def run_server(namespace):
     
     :param namespace: options' namespace
     """
-    _ = namespace
+    ns = namespace
     # configure and run the server
     # 1. base settings
-    settings.DEBUG = _.debug
+    settings.DEBUG = ns.debug
     settings.HTTP_ADDRESS = "127.0.0.1"
-    settings.HTTP_PORT = _.port + 1
-    settings.JOB_CLASS_PACKAGES = _.jobs
-    settings.DATA_BASE_DIR = _.data_dir
-    settings.TIMEZONE = _.timezone
+    settings.HTTP_PORT = ns.port + 1
+    settings.JOB_CLASS_PACKAGES = ns.jobs
+    settings.DATA_BASE_DIR = ns.data_dir
+    settings.TIMEZONE = ns.timezone
     # NB: SCHEDULER_CLASS is not handled
     # 2. database settings
-    settings.DATABASE_CLASS = _.db_nds_base + _.dbms.capitalize()
+    settings.DATABASE_CLASS = ns.db_nds_base + ns.dbms.capitalize()
     c = configparser.ConfigParser()
-    c.read(_.db_config)
-    settings.DATABASE_CONFIG_DICT = dict(c[_.dbms])
-    settings.JOBS_TABLENAME = _.jobs_table
-    settings.EXECUTIONS_TABLENAME = _.executions_table
-    settings.FILES_TABLENAME = _.files_table
-    settings.AUDIT_LOGS_TABLENAME = _.logs_table
+    c.read(ns.db_config)
+    ns.db_nds_base = "ndscheduler.core.datastore.providers."
+    ns.db_nds_base += "mysql.DatastoreMysql" if ns.dbms == "mysql" else \
+                      "postgresql.DatastorePostgresql" if ns.dbms == "postgresql" else \
+                      "sqlite.DatastoreSqlite"
+    settings.DATABASE_CONFIG_DICT = dict(c._sections[ns.db_profile])
+    settings.JOBS_TABLENAME       = ns.jobs_table
+    settings.EXECUTIONS_TABLENAME = ns.executions_table
+    settings.FILES_TABLENAME      = ns.files_table
+    settings.AUDIT_LOGS_TABLENAME = ns.logs_table
     # 3. other settings
-    settings.THREAD_POOL_SIZE = _.tp_size
-    settings.JOB_MAX_INSTANCES = _.job_max
-    settings.JOB_COALESCE = _.job_coal
-    settings.JOB_MISFIRE_GRACE_SEC = _.job_misfire
-    settings.TORNADO_MAX_WORKERS = _.tworkers
+    settings.THREAD_POOL_SIZE      = ns.tp_size
+    settings.JOB_MAX_INSTANCES     = ns.job_max
+    settings.JOB_COALESCE          = ns.job_coal
+    settings.JOB_MISFIRE_GRACE_SEC = ns.job_misfire
+    settings.TORNADO_MAX_WORKERS   = ns.tworkers
     # 4. layout settings
     # settings.APP_INDEX_PAGE left as default (index.html)
-    settings.STATIC_DIR_PATH = settings.TEMPLATE_DIR_PATH = _.static_path
+    settings.STATIC_DIR_PATH = settings.TEMPLATE_DIR_PATH = ns.static_path
     # 5. now start the server with the tuned settings
     from .tables import tables
     BotsSchedulerServer.run()

@@ -4,7 +4,7 @@ from tinyscript import *
 
 __script__    = "BotsScheduler"
 __author__    = "Alexandre D'Hondt"
-__version__   = "1.2.0"
+__version__   = "1.2.1"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __reference__ = "https://github.com/Nextdoor/ndscheduler"
@@ -17,8 +17,6 @@ Moreover, it provides authentication through the use of an integrated reverse pr
 
 
 BANNER_FONT   = "smkeyboard"
-DB_NDS_BASE   = "ndscheduler.core.datastore.providers.sqlite.Datastore"
-DB_SQLITE_DEF = "datastore.db"
 DEFAULT_USERS = ["administrator:change-this"]
 LOG_FORMAT    = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 STATIC_PATH   = "static"
@@ -47,12 +45,11 @@ if __name__ == "__main__":
     notify = run.add_argument_group("notification options")
     notify.add_argument("--smtp-config", default="conf/smtp.ini", type=ts.file_exists,
                         help="SMTP INI configuration file")
-    notify.add_argument("--mail-profile", nargs="*", help="SMTP profile to be selected from the configuration file")
+    notify.add_argument("--smtp-profile", nargs="*", help="SMTP profile to be selected from the configuration file")
     # 3. database settings
     db = run.add_argument_group("database options")
-    db.add_argument("--dbms", default="sqlite", choices=["sqlite", "postgresql", "mysql"],
-                    help="database management system")
     db.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="database INI configuration file")
+    db.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
     db.add_argument("--executions-table", default="scheduler_executions", help="executions table name")
     db.add_argument("--jobs-table", default="scheduler_jobs", help="jobs table name")
     db.add_argument("--files-table", default="scheduler_files", help="data files table name")
@@ -76,23 +73,43 @@ if __name__ == "__main__":
     proxy.add_argument("--htpasswd", type=ts.file_exists, help="authentication file",
                        note="if None, .htpasswd is automatically created with the DEFAULT_USERS")
     # maintenance commands' arguments
-    sparsers.add_parser("clean", help="remove server's virtual environment")
+    clean_cmd = sparsers.add_parser("clean", help="clean server artifacts")
+    clean = clean_cmd.add_argument_group("clean options")
+    clean.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
+    clean.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="DB INI configuration file")
+    clean.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
+    reset_cmd = sparsers.add_parser("reset", help="clean server artifacts and reset server")
+    reset = reset_cmd.add_argument_group("reset options")
+    reset.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
+    reset.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="DB INI configuration file")
+    reset.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
+    # initialization and logging configuration
     initialize(noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
     logging.setLoggers("apscheduler.executors.default", "mitmproxy.reverse.proxy", "ndscheduler.core.scheduler_manager",
                        "ndscheduler.core.scheduler.base", "ndscheduler.job", "ndscheduler.server.server",
                        "numexpr.utils", "tornado.access", "tornado.application")
     # complete args namespace with additional settings from the constants above
-    args.db_nds_base   = DB_NDS_BASE
     args.default_users = DEFAULT_USERS
     args.static_path   = STATIC_PATH
+    p = args.db_profile
+    if p in ["mysql", "postgresql", "sqlite"]:
+        args.dbms = p
+    else:
+        c = configparser.ConfigParser()
+        c.read(args.db_config)
+        try:
+            args.dbms = c.get(p, "dbms")
+        except configparser.Error:
+            logger.critical("Bad DB profile ; should have 'dbms' defined")
+    # handle the selected command
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
         with VirtualEnv(".venv", VENV_REQS) as venv:
             from core import base, run_proxy, run_server
             from ndscheduler import settings
-            base._load_mail_config(args.smtp_config, *args.mail_profile)
+            base._load_mail_config(args.smtp_config, *args.smtp_profile)
             sys.modules['botscheduler'] = base
             logger.info("Starting the authentication proxy...")
             if not args.local:
@@ -102,10 +119,23 @@ if __name__ == "__main__":
             run_server(args)
             if not args.local:
                 p.join(5)
-    else:
-        if os.path.isfile(DB_SQLITE_DEF):
-            os.remove(DB_SQLITE_DEF)
-        if os.path.isdir(VENV_NAME):
-            shutil.rmtree(VENV_NAME)
+    elif args.command in ["clean", "reset"]:
+        # remove the SQLite datastore DB if relevant
+        if args.dbms == "sqlite":
+            f = c.get(args.db_profile, "file_path")
+            if os.path.isfile(f):
+                os.remove(f)
+        # clear the data directory
+        shutil.rmtree(args.data_dir)
+        os.mkdir(args.data_dir)
+        if args.command == "reset":
+            # remove the virtual environment
+            if os.path.isdir(VENV_NAME):
+                shutil.rmtree(VENV_NAME)
+            # prepare configuration files from templates, if any
+            for conf in os.listdir("conf"):
+                conf = os.path.join("conf", conf)
+                if conf.endswith(".template"):
+                    os.rename(conf, conf[:-9])
         logger.info("DONE")
 
