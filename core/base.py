@@ -45,38 +45,49 @@ def _load_mail_config(config_path, *profiles):
     MAIL_PROFILES = profiles
 
 
+def email(profile, items):
+    """ Function for sending a notification email. """
+    global MAIL_CONFIG
+    c = MAIL_CONFIG
+    if not c.has_section(profile):
+        logger.error("No profile '%s'" % profile)
+        return
+    # mandatory parameters
+    for option in ["from", "to", "hostname", "port"]:
+        if not c.has_option(profile, option):
+            logger.error("Missing option '%s'" % option)
+            return
+    kwargs['server'] = (c.get(profile, "hostname"), c.get(profile, "port"))
+    kwargs['content_type'] = "html"
+    # optional SMTP parameters
+    try:
+        kwargs['security'] = c.get(profile, "security")
+    except ini.NoOptionError:
+        pass
+    try:
+        kwargs['auth'] = (c.get(profile, "user"), c.get(profile, "password"))
+    except ini.NoOptionError:
+        pass
+    try:
+        send_mail(c.get(profile, "from"), c.get(profile, "to"), items[0]._data, Report(*items[1:]).html(), **kwargs)
+    except:
+        logger.error("Could not send email with profile '%s'" % profile)
+
+
 def report(f):
     """ Method decorator for producing a report from a list of report items from tinyscript.report. """
     @wraps(f)
     def _wrapper(self, *args, **kwargs):
-        items = f(self, *args, **kwargs)
+        global MAIL_PROFILES
+        notify, items = f(self, *args, **kwargs)
         if not isinstance(items, (tuple, list)):
             items = [items]
-        subject = self.__class__.meta_info().get('report_title')
-        if subject:
-            items.insert(0, Section(subject))
-        else:
-            subject = items[0]._data
-        for profile in MAIL_PROFILES:
-            try:
-                from_mail = MAIL_CONFIG.get(profile, "from")
-            except ini.NoSectionError:
-                logger.error("No profile '%s'" % profile)
-            try:
-                to_mail   = MAIL_CONFIG.get(profile, "to")
-                body = Report(*items[1:]).html()
-                kwargs['server'] = (MAIL_CONFIG.get(profile, "hostname"), MAIL_CONFIG.get(profile, "port"))
-                try:
-                    kwargs['auth'] = (MAIL_CONFIG.get(profile, "user"), MAIL_CONFIG.get(profile, "password"))
-                except ini.NoOptionError:
-                    pass
-                try:
-                    kwargs['security'] = MAIL_CONFIG.get(profile, "security")
-                except ini.NoOptionError:
-                    pass
-                send_mail(from_mail, to_mail, subject, body, **kwargs)
-            except ini.Error:
-                logger.error("Could not send email with profile '%s'" % profile)
+        title = self.__class__.meta_info().get('report_title')
+        if title:
+            items.insert(0, Section(title))
+        if notify:
+            for profile in MAIL_PROFILES:
+                email(profile, items)
         try:
             return Report(*items).html()
         except:
@@ -85,7 +96,7 @@ def report(f):
 
 
 class JobBase(OriginalJobBase):
-    """ JoBase enhancement for defining meta_info as a simple class attribute and handling default values. """
+    """ JobBase enhancement for defining meta_info as a simple class attribute and handling default values. """
     @classmethod
     def get_failed_result(cls):
         error = "".join(traceback.format_exception(*sys.exc_info()))
