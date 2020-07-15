@@ -14,8 +14,8 @@ class HaveIBeenSoldJob(JobBase):
     @report
     def run(self, emails_path, **kwargs):
         with HaveIBeenSoldBot() as bot:
-            result = bot.check_from_file(emails_path)
+            self._data = bot.check_from_file(emails_path)
         report = [Section("Email addresses found on HaveIBeenSold?")]
-        report.append(List(*result) if len(result) > 0 else Text("None", color="green"))
+        report.append(List(*self._data) if len(self._data) > 0 else Text("None", color="green"))
         return report 
 

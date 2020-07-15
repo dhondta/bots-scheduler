@@ -15,9 +15,9 @@ class ShodanHostsCheckJob(JobBase):
     @report
     def run(self, api_key, ips_path, **kwargs):
         with ShodanBot(api_key) as bot:
-            result = bot.hosts_from_file(ips_path)
+            self._data = bot.hosts_from_file(ips_path)
         hosts = OrderedDict()
-        for host, data in sorted(result.items(), key=lambda x: ip2int(x[0])):
+        for host, data in sorted(self._data.items(), key=lambda x: ip2int(x[0])):
             hosts[host] = data
         return [Section("Hosts found on Shodan"), Data(hosts)]
 

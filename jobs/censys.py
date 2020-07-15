@@ -16,9 +16,9 @@ class CensysHostsCheckJob(JobBase):
     @report
     def run(self, api_id, api_secret, ips_path, **kwargs):
         with CensysBot(api_id, api_secret) as bot:
-            result = bot.hosts_from_file(ips_path)
+            self._data = bot.hosts_from_file(ips_path)
         hosts = OrderedDict()
-        for host, data in sorted(result.items(), key=lambda x: ip2int(x[0])):
+        for host, data in sorted(self._data.items(), key=lambda x: ip2int(x[0])):
             hosts[host] = data
         return [Section("Hosts found on Censys"), Data(hosts)]
 

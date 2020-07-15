@@ -57,7 +57,8 @@ def email(profile, items):
         if not c.has_option(profile, option):
             logger.error("Missing option '%s'" % option)
             return
-    kwargs['server'] = (c.get(profile, "hostname"), c.get(profile, "port"))
+    kwargs = {}
+    kwargs['server'] = (c.get(profile, "hostname"), int(c.get(profile, "port")))
     kwargs['content_type'] = "html"
     # optional SMTP parameters
     try:
@@ -70,8 +71,8 @@ def email(profile, items):
         pass
     try:
         send_mail(c.get(profile, "from"), c.get(profile, "to"), items[0]._data, Report(*items[1:]).html(), **kwargs)
-    except:
-        logger.error("Could not send email with profile '%s'" % profile)
+    except Exception as e:
+        logger.error("Could not send email with profile '%s' (%s)" % (profile, str(e)))
 
 
 def report(f):
@@ -79,13 +80,14 @@ def report(f):
     @wraps(f)
     def _wrapper(self, *args, **kwargs):
         global MAIL_PROFILES
-        notify, items = f(self, *args, **kwargs)
+        items = f(self, *args, **kwargs)
         if not isinstance(items, (tuple, list)):
             items = [items]
         title = self.__class__.meta_info().get('report_title')
         if title:
             items.insert(0, Section(title))
-        if notify:
+        # trigger email notification based on an explicit flag or on non-empty data set as an attribute to the job
+        if getattr(self, "_notify", len(getattr(self, "_data", [])) > 0):
             for profile in MAIL_PROFILES:
                 email(profile, items)
         try:

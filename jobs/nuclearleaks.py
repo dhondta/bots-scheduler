@@ -14,9 +14,9 @@ class NuclearLeaksJob(JobBase):
     @report
     def run(self, emails_domains_path, **kwargs):
         with NuclearLeaksBot() as bot:
-            results = bot.breaches_from_file(emails_domains_path)
+            self._data = bot.breaches_from_file(emails_domains_path)
         report = [Section("Breaches found on NuclearLeaks")]
-        for domain, breaches in results.items():
+        for domain, breaches in self._data.items():
             report.append(Subsection(Code(domain, size=20)))
             for breach in breaches:
                 report.append(Title(breach.pop('database'), "h4"))

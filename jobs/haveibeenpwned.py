@@ -14,9 +14,9 @@ class HaveIBeenPwnedJob(JobBase):
     @report
     def run(self, emails_domains_path, **kwargs):
         with HaveIBeenPwnedBot() as bot:
-            results = bot.breaches_from_file(emails_domains_path)
+            self._data = bot.breaches_from_file(emails_domains_path)
         report = [Section("Breaches found on HaveIBeenPwned?")]
-        for domain, breaches in results.items():
+        for domain, breaches in self._data.items():
             report.append(Subsection(Code(domain, size=20)))
             for breach in breaches:
                 report.append(Title(breach.pop('Title'), "h4"))
@@ -50,6 +50,6 @@ class PwnedPasswordsJob(JobBase):
     @report
     def run(self, passwords_path, **kwargs):
         with PwnedPasswordsBot() as bot:
-            pwned = bot.check_from_file(passwords_path)
-        return [Section("Pwned passwords found on HaveIBeenPwned?"), List(*pwned)]
+            self._data = bot.check_from_file(passwords_path)
+        return [Section("Pwned passwords found on HaveIBeenPwned?"), List(*self._data)]
 
