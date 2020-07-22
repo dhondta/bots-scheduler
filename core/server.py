@@ -52,13 +52,9 @@ def run_server(namespace):
     settings.TIMEZONE = ns.timezone
     # NB: SCHEDULER_CLASS is not handled
     # 2. database settings
-    settings.DATABASE_CLASS = ns.db_nds_base + ns.dbms.capitalize()
     c = configparser.ConfigParser()
     c.read(ns.db_config)
-    ns.db_nds_base = "ndscheduler.core.datastore.providers."
-    ns.db_nds_base += "mysql.DatastoreMysql" if ns.dbms == "mysql" else \
-                      "postgresql.DatastorePostgresql" if ns.dbms == "postgresql" else \
-                      "sqlite.DatastoreSqlite"
+    settings.DATABASE_CLASS = "ndscheduler.core.datastore.providers.%s.Datastore%s" % (ns.dbms, ns.dbms.capitalize())
     settings.DATABASE_CONFIG_DICT = dict(c._sections[ns.db_profile])
     settings.JOBS_TABLENAME       = ns.jobs_table
     settings.EXECUTIONS_TABLENAME = ns.executions_table
