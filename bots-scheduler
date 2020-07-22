@@ -86,18 +86,18 @@ if __name__ == "__main__":
     # initialization and logging configuration
     initialize(noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
-    logging.setLoggers("apscheduler.executors.default", "mitmproxy.reverse.proxy", "ndscheduler.core.scheduler_manager",
-                       "ndscheduler.core.scheduler.base", "ndscheduler.job", "ndscheduler.server.server",
-                       "numexpr.utils", "tornado.access", "tornado.application")
+    logging.setLoggers("apscheduler.executors.default", "core.base", "mitmproxy.reverse.proxy",
+                       "ndscheduler.core.scheduler_manager", "ndscheduler.core.scheduler.base", "ndscheduler.job",
+                       "ndscheduler.server.server", "numexpr.utils", "tornado.access", "tornado.application")
     # complete args namespace with additional settings from the constants above
     args.default_users = DEFAULT_USERS
     args.static_path   = STATIC_PATH
+    c = configparser.ConfigParser()
+    c.read(args.db_config)
     p = args.db_profile
     if p in ["mysql", "postgresql", "sqlite"]:
         args.dbms = p
     else:
-        c = configparser.ConfigParser()
-        c.read(args.db_config)
         try:
             args.dbms = c.get(p, "dbms")
         except configparser.Error:
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         with VirtualEnv(".venv", VENV_REQS) as venv:
             from core import base, run_proxy, run_server
             from ndscheduler import settings
-            base._load_mail_config(args.smtp_config, *args.smtp_profile)
+            base._load_mail_config(args.smtp_config, *(args.smtp_profile or []))
             sys.modules['botscheduler'] = base
             logger.info("Starting the authentication proxy...")
             if not args.local:
