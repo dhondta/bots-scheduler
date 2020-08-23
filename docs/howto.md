@@ -8,7 +8,7 @@
 
 ## Overview
 
-The plugin architecture of this project relies on the jobs folder(s), configurable through the `--jobs` option of the *basic options* (see [the *Server tuning* section](sever.html)). These jobs folders are Python packages to be imported by the main application.
+The plugin architecture of this project relies on the jobs folder(s), configurable through the `--jobs` option of the *basic options* (see [the *Server tuning* section](server.html)). These jobs folders are Python packages to be imported by the main application.
 
 ```sh
 $ ./bots-scheduler run [...] --jobs my-jobs-folder --jobs my-other-jobs-folder

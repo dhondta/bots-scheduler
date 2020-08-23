@@ -43,12 +43,12 @@ if __name__ == "__main__":
                      note="this will be the listening port of the proxy, this of the scheduler will be port+1")
     # 2. notification settings
     notify = run.add_argument_group("notification options")
-    notify.add_argument("--smtp-config", default="conf/smtp.ini", type=ts.file_exists,
+    notify.add_argument("--smtp-config", default="conf/smtp.ini", type=ts.ini_config,
                         help="SMTP INI configuration file")
     notify.add_argument("--smtp-profile", nargs="*", help="SMTP profile to be selected from the configuration file")
     # 3. database settings
     db = run.add_argument_group("database options")
-    db.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="database INI configuration file")
+    db.add_argument("--db-config", default="conf/db.ini", type=ts.ini_config, help="database INI configuration file")
     db.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
     db.add_argument("--executions-table", default="scheduler_executions", help="executions table name")
     db.add_argument("--jobs-table", default="scheduler_jobs", help="jobs table name")
@@ -76,15 +76,15 @@ if __name__ == "__main__":
     clean_cmd = sparsers.add_parser("clean", help="clean server artifacts")
     clean = clean_cmd.add_argument_group("clean options")
     clean.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
-    clean.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="DB INI configuration file")
+    clean.add_argument("--db-config", default="conf/db.ini", type=ts.ini_config, help="DB INI configuration file")
     clean.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
     reset_cmd = sparsers.add_parser("reset", help="clean server artifacts and reset server")
     reset = reset_cmd.add_argument_group("reset options")
     reset.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
-    reset.add_argument("--db-config", default="conf/db.ini", type=ts.file_exists, help="DB INI configuration file")
+    reset.add_argument("--db-config", default="conf/db.ini", type=ts.ini_config, help="DB INI configuration file")
     reset.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
     # initialization and logging configuration
-    initialize(noargs_action="help")
+    initialize(add_version=True, noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
     logging.setLoggers("apscheduler.executors.default", "core.base", "mitmproxy.reverse.proxy",
                        "ndscheduler.core.scheduler_manager", "ndscheduler.core.scheduler.base", "ndscheduler.job",
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
-        with VirtualEnv(".venv", VENV_REQS) as venv:
+        with VirtualEnv(".venv", VENV_REQS, verbose=args.verbose) as venv:
             from core import base, run_proxy, run_server
             from ndscheduler import settings
             base._load_mail_config(args.smtp_config, *(args.smtp_profile or []))

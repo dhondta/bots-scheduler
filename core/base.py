@@ -37,11 +37,10 @@ ip2int = lambda a: struct.unpack("!I", socket.inet_aton(a))[0]
 logger = logging.getLogger(__name__)
 
 
-def _load_mail_config(config_path, *profiles):
+def _load_mail_config(config, *profiles):
     """ SMTP configuration file load function. """
     global MAIL_CONFIG, MAIL_PROFILES
-    MAIL_CONFIG = configparser.ConfigParser()
-    MAIL_CONFIG.read(config_path)
+    MAIL_CONFIG = config
     MAIL_PROFILES = profiles
 
 
