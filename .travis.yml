@@ -1,0 +1,14 @@
+language: python
+sudo: required
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
+cache: pip
+install:
+  - pip install -r requirements.txt
+script:
+  - ./bots-scheduler --help
+  - ./bots-scheduler --version
+  - echo "done"
