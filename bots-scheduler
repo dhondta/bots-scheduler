@@ -21,7 +21,7 @@ DEFAULT_USERS = ["administrator:change-this"]
 LOG_FORMAT    = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 STATIC_PATH   = "static"
 VENV_NAME     = ".venv"
-VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler==0.3.0", "pybots"]
+VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler==0.3.0", "pybots>=2.0.11"]
 
 
 def at_exit():
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
-        with VirtualEnv(".venv", VENV_REQS, verbose=args.verbose) as venv:
+        with VirtualEnv(".venv", VENV_REQS, no_cache=True, verbose=args.verbose) as venv:
             from core import base, run_proxy, run_server
             from ndscheduler import settings
             base._load_mail_config(args.smtp_config, *(args.smtp_profile or []))
