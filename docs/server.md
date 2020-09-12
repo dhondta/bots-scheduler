@@ -27,11 +27,13 @@ Application's options are organized per component. You can see it by invoking `-
 ```sh
 $ ./bots-scheduler run --help
 [...]
-usage: ./bots-scheduler run [-h] [--help] [-d] [-j JOBS] [-l] [-p PORT]
-                            [--dbms {sqlite,postgresql,mysql}]
-                            [--db-config DB_CONFIG]
+usage: ./bots-scheduler run [-h] [--help] [--debug] [-j JOBS] [-d DATA_DIR]
+                            [-l] [-p PORT] [--smtp-config SMTP_CONFIG]
+                            [--smtp-profile [SMTP_PROFILE [SMTP_PROFILE ...]]]
+                            [--db-config DB_CONFIG] [--db-profile DB_PROFILE]
                             [--executions-table EXECUTIONS_TABLE]
                             [--jobs-table JOBS_TABLE]
+                            [--files-table FILES_TABLE]
                             [--logs-table LOGS_TABLE] [--job-coalesce]
                             [--job-max-instances JOB_MAX]
                             [--job-misfire JOB_MISFIRE]
@@ -50,11 +52,27 @@ The server can be run locally or not and its basic parameters, host IP address a
 ```sh
 [...]
 base options:
-  -d, --debug           run the server in debug mode (default: False)
+  --debug               run the server in debug mode (default: False)
   -j JOBS, --jobs JOBS  folder with jobs to be imported (default: ['jobs'])
+  -d DATA_DIR, --data-dir DATA_DIR
+                        folder with the data files to be used (default: data)
   -l, --local           force running the server locally (default: False)
   -p PORT, --port PORT  server's port number (default: 8888)
                          NB: this will be the listening port of the proxy, this of the scheduler will be port+1
+[...]
+```
+
+## Notifications
+
+The scheduler can be tuned to send email notifications when tasks give an output. You can tune this by specifying an SMTP configuration and one or more SMTP profiles, as defined in the SMTP configuration.
+
+```sh
+[...]
+notification options:
+  --smtp-config SMTP_CONFIG
+                        SMTP INI configuration file (default: conf/smtp.ini)
+  --smtp-profile [SMTP_PROFILE [SMTP_PROFILE ...]]
+                        SMTP profile to be selected from the configuration file (default: None)
 [...]
 ```
 

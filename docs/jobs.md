@@ -55,7 +55,7 @@ This module contains two jobs:
 
 - *Have I Been Pwned? - Pwned passwords check*: It checks a list of passwords for publicly known ones.
 
-<p align="center"><img src="img/job_hibp-emails-check.png" alt="Have I Been Pwned? - Pwned passwords check"></p>
+<p align="center"><img src="img/job_hibp-passwords-check.png" alt="Have I Been Pwned? - Pwned passwords check"></p>
 
 !!! note "k-Anonymity"
     
