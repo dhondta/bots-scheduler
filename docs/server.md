@@ -64,7 +64,7 @@ base options:
 
 ## Notifications
 
-The scheduler can be tuned to send email notifications when tasks give an output. You can tune this by specifying an SMTP configuration and one or more SMTP profiles, as defined in the SMTP configuration.
+The scheduler can be tuned to send email notifications when tasks give an output. You can tune this by specifying an SMTP configuration in the INI format and one or more SMTP profiles, as defined in the SMTP configuration. These profiles are the section titles of the INI configuration.
 
 ```sh
 [...]
@@ -75,6 +75,27 @@ notification options:
                         SMTP profile to be selected from the configuration file (default: None)
 [...]
 ```
+
+!!! note "SMTP INI configuration fields"
+    
+    The format supports 7 fields, like shown in the example below.
+    
+        [my-profile]
+        hostname = localhost
+        port     = 25
+        security = unencrypted
+        user     = changeme
+        password = changeme
+        from     = changeme@mydomain.com
+        to       = changeme@mydomain.com
+    
+    For the sake of simplicity, a template configuration is provided in the `conf` folder of the project.
+    
+    Note that, for the `security` field, using a default port sets it to the appropriate value such as in the following list. Setting this value is thus, in most cases, not required.
+    
+    - 25: `unencrypted`
+    - 465: `ssl`
+    - 587: `starttls`
 
 ## Backend database
 
