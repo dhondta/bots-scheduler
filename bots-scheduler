@@ -4,7 +4,7 @@ from tinyscript import *
 
 __script__    = "BotsScheduler"
 __author__    = "Alexandre D'Hondt"
-__version__   = "1.2.1"
+__version__   = "1.2.2"
 __copyright__ = "A. D'Hondt"
 __license__   = "agpl-3.0"
 __reference__ = "https://github.com/Nextdoor/ndscheduler"
