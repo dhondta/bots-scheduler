@@ -27,7 +27,7 @@ define(['backbone', 'bootstrap', 'moment'], function(backbone, bootstrap, moment
       e.preventDefault();
       var range = parseInt($('#files-filter-time-range').val(), 10);
       var end = moment();
-      var start = moment().subtract(range, 'second');
+      var start = range === 0 ? new Date(0) : moment().subtract(range, 'second');
       this.collection.getFilesByRange(start.toISOString(), end.toISOString());
     }
   });

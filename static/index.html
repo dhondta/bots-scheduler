@@ -85,10 +85,11 @@
                 <div id="executions-page-sidebar" style="display:none">
                     <div class="form-group">
                         <select class="form-control" id="filter-time-range">
-                            <option value="3600">1 hour</option>
-                            <option value="86400" selected>1 day</option>
-                            <option value="604800">1 week</option>
+                            <option value="0">All</option>
+                            <option value="86400">1 day</option>
+                            <option value="604800" selected>1 week</option>
                             <option value="2592000">1 month</option>
+                            <option value="15552000">6 months</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -119,10 +120,11 @@
                     </div>
                     <div class="form-group">
                         <select class="form-control" id="files-filter-time-range">
-                            <option value="3600">1 hour</option>
+                            <option value="0" selected>All</option>
                             <option value="86400">1 day</option>
                             <option value="604800">1 week</option>
-                            <option value="2592000" selected>1 month</option>
+                            <option value="2592000">1 month</option>
+                            <option value="15552000">6 months</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -142,8 +144,9 @@
                 <div id="logs-page-sidebar" style="display:none">
                     <div class="form-group">
                         <select class="form-control" id="logs-filter-time-range">
-                            <option value="86400" selected>1 day</option>
-                            <option value="604800">1 week</option>
+                            <option value="0">All</option>
+                            <option value="86400">1 day</option>
+                            <option value="604800" selected>1 week</option>
                             <option value="2592000">1 month</option>
                             <option value="15552000">6 months</option>
                         </select>

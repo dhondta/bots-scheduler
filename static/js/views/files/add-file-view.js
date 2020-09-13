@@ -22,7 +22,6 @@ define(['backbone', 'config', 'utils'], function(backbone, config, utils) {
         e.preventDefault();
         var file = $('input[name="add-file-input"]')[0].files[0];
         this.collection.addFile(file);
-        //this.collection.parse();
       }, this));
     }
   });

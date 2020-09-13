@@ -45,10 +45,8 @@ class FilesHandler(BaseHandler):
 
         It's a blocking operation.
         """
-        now = datetime.utcnow()
-        time_range_end = self.get_argument('time_range_end', now.isoformat())
-        one_month_ago = now - timedelta(seconds=2592000)
-        time_range_start = self.get_argument('time_range_start', one_month_ago.isoformat())
+        time_range_end = self.get_argument('time_range_end', datetime.utcnow().isoformat())
+        time_range_start = self.get_argument('time_range_start', datetime(1970, 1, 1).isoformat())
         return self.datastore.get_datafiles(time_range_start, time_range_end)
 
     @tornado.concurrent.run_on_executor
@@ -86,7 +84,10 @@ class FilesHandler(BaseHandler):
         Handles an endpoint:
             POST /api/v1/data
         """
-        self.json_args = self.request.files['file'][0]
+        try:
+            self.json_args = self.request.files['file'][0]
+        except (KeyError, IndexError):
+            raise tornado.web.HTTPError(400, reason='No file provided.')
         # only allowed input format: {"filename":"...","content":"..."}
         for field in ['filename', 'body', 'content_type']:
             if field not in self.json_args:
@@ -120,6 +121,7 @@ class FilesHandler(BaseHandler):
                 prefix = b(line[1:].strip())
             if any(ensure_str(c) not in string.printable for c in line):
                 raise tornado.web.HTTPError(400, reason='Bad character at line: %s' % string.shorten(line, 40))
+            #FIXME: fix specific format checks
             #if not any(f(line) for f in [is_asn, is_domain, is_email, is_hash, is_ip, is_mac, is_port, is_url]):
             #    raise tornado.web.HTTPError(400, reason='Bad content format: %s' % string.shorten(line, 40))
         # then write the file
@@ -183,7 +185,7 @@ class FilesHandler(BaseHandler):
 
 def __add_datafile(self, filename, description="", **kwargs):
     """Insert a data file.
-    :param str filename: string for the relative path to the data file.
+    :param str filename:    string for the relative path to the data file.
     :param str description: string for describing the data file.
     """
     descr, entries = get_file_metadata(_abspath(filename))
@@ -201,9 +203,9 @@ base.DatastoreBase.add_datafile = __add_datafile
 
 def __build_datafile(self, row):
     """Return datafile from a row of scheduler_datafiles table.
-    :param obj row: A row instance of scheduler_datafiles table.
-    :return: A dictionary of data file.
-    :rtype: dict
+    :param obj row: row instance of scheduler_datafiles table.
+    :return:        dictionary of data file.
+    :rtype:         dict
     """
     try:
         created_time = self.get_time_isoformat_from_db(row.created_time)
@@ -223,8 +225,8 @@ def __get_datafile(self, filename):
     """Return a data file dictionary.
 
     :param str filename: name of the data file.
-    :return: data file
-    :rtype: dict
+    :return:             data file
+    :rtype:              dict
     """
     select_file = tables.DATAFILES.select().where(tables.DATAFILES.c.filename == filename)
     rows = self.engine.execute(select_file)
@@ -237,28 +239,15 @@ def __get_datafiles(self, time_range_start, time_range_end):
     """Return a list of data files.
 
     :param str time_range_start: ISO format for time range starting point.
-    :param str time_range_end: ISO for time range ending point.
-    :return: A dictionary with all data files, e.g.,
-        {
-            'logs': [
-                {
-                    'filename': ...
-                    'user': ...
-                    'created_time': ...
-                    'entries': ...
-                    'description': ...
-                }
-            ]
-        }
-        Sorted by created_time.
-    :rtype: dict
+    :param str time_range_end:   ISO for time range ending point.
+    :return:                     dictionary with all data files within the given timeframe sorted by created_time
+    :rtype:                      dict
     """
     utc = dateutil.tz.gettz('UTC')
     start_time = dateutil.parser.parse(time_range_start).replace(tzinfo=utc)
     end_time = dateutil.parser.parse(time_range_end).replace(tzinfo=utc)
-    selectable = select('*').where(
-        tables.DATAFILES.c.created_time.between(
-            start_time, end_time)).order_by(desc(tables.DATAFILES.c.created_time))
+    selectable = select('*').where(tables.DATAFILES.c.created_time.between(start_time, end_time)) \
+                            .order_by(desc(tables.DATAFILES.c.created_time))
     rows = self.engine.execute(selectable)
     return {'files': [self._build_datafile(row) for row in rows]}
 base.DatastoreBase.get_datafiles = __get_datafiles
