@@ -84,7 +84,7 @@ if __name__ == "__main__":
     reset.add_argument("--db-config", default="conf/db.ini", type=ts.ini_config, help="DB INI configuration file")
     reset.add_argument("--db-profile", default="sqlite", help="DB profile to be selected from the configuration file")
     # initialization and logging configuration
-    initialize(add_version=True, noargs_action="help")
+    initialize(add_version=True, ext_logging=True, noargs_action="help")
     logging.renameLogger("main", "bots_scheduler")
     logging.setLoggers("apscheduler.executors.default", "core.base", "mitmproxy.reverse.proxy",
                        "ndscheduler.core.scheduler_manager", "ndscheduler.core.scheduler.base", "ndscheduler.job",
