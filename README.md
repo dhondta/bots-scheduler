@@ -6,7 +6,7 @@
 
 # Bots Scheduler [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Bots%20Scheduler%20%3a%20A%20cron-like%20Web-based%20security%20task%20scheduler&url=https://github.com/dhondta/bots-scheduler&hashtags=python,cybersecurity,infosec,bots)
 
-This application is a scheduling system based on [Nextdoor Scheduler](https://github.com/Nextdoor/ndscheduler) that uses jobs templated upon [PyBots](https://github.com/dhondta/pybots). It especially focuses on tasks derived from security-related Web services like Shodan or Censys. Additionally, it protects the original Web server from Nextdoor with an authentication proxy based on [mitmproxy](https://github.com/mitmproxy/mitmproxy).
+This application is a scheduling system based on [Nextdoor Scheduler](https://github.com/Nextdoor/ndscheduler/) that uses jobs templated upon [PyBots](https://github.com/dhondta/pybots/). It especially focuses on tasks derived from security-related Web services like Shodan or Censys. Additionally, it protects the original Web server from Nextdoor with an authentication proxy based on [mitmproxy](https://github.com/mitmproxy/mitmproxy/).
 
 ## Installation
 
