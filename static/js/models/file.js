@@ -30,7 +30,7 @@ define(['backbone', 'vendor/moment-timezone-with-data'], function(backbone, mome
     },
     getDeleteIcon: function() {
       return '<span><a href="#" data-content="'+this.get('filename')+
-             '" data-action="delete-file"><i class="fa fa-times fa-lg failed-color"></i></a></span>';
+             '" data-action="delete-file"><i class="fa fa-trash-can fa-lg failed-color"></i></a></span>';
     }
   });
 });
