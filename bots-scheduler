@@ -22,7 +22,7 @@ DEFAULT_USERS = ["administrator:change-this"]
 LOG_FORMAT    = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 STATIC_PATH   = "static"
 VENV_NAME     = ".venv"
-VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler==0.3.0", "pybots>=2.0.11"]
+VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler==0.3.0", "pybots>=2.0.12"]
 
 
 def at_exit():
