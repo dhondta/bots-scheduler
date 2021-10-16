@@ -1,3 +1,4 @@
+import sqlalchemy
 from ndscheduler import constants, utils
 from ndscheduler.core.scheduler_manager import SchedulerManager
 from ndscheduler.core.scheduler.base import SingletonScheduler
@@ -76,4 +77,7 @@ code.replace(handlers.executions.Handler._get_executions, "ten_minutes_ago = now
                                                           "ten_minutes_ago = now - timedelta(days=1)")
 code.replace(handlers.audit_logs.Handler._get_logs, "ten_minutes_ago = now - timedelta(minutes=10)",
                                                     "ten_minutes_ago = now - timedelta(days=1)")
+
+# fix to StopIteration exception from SQLAlchemy
+code.replace(sqlalchemy.engine.result.ResultProxy.__iter__, "raise StopIteration", "return")
 

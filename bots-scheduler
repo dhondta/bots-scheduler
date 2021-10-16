@@ -22,7 +22,7 @@ DEFAULT_USERS = ["administrator:change-this"]
 LOG_FORMAT    = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 STATIC_PATH   = "static"
 VENV_NAME     = ".venv"
-VENV_REQS     = ["passlib", "mitmproxy", "ndscheduler==0.3.0", "pybots>=2.0.12"]
+VENV_REQS     = ["passlib", "mitmproxy", "pybots>=2.0.12", "ndscheduler==0.3.0"]
 
 
 def at_exit():
@@ -35,13 +35,15 @@ if __name__ == "__main__":
     # run command arguments
     run = sparsers.add_parser("run", help="run the server")
     # 1. base settings
-    net = run.add_argument_group("base options")
-    net.add_argument("--debug", action="store_true", help="run the server in debug mode")
-    net.add_argument("-j", "--jobs", action="append", default=["jobs"], help="folder with jobs to be imported")
-    net.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
-    net.add_argument("-l", "--local", action="store_true", help="force running the server locally")
-    net.add_argument("-p", "--port", type=ts.port_number, default=8888, help="server's port number",
-                     note="this will be the listening port of the proxy, this of the scheduler will be port+1")
+    base = run.add_argument_group("base options")
+    base.add_argument("--debug", action="store_true", help="run the server in debug mode")
+    base.add_argument("-c", "--no-venv-cache", action="store_true", help="force no_cache=False while setting up the "
+                                                                         "virtual environment")
+    base.add_argument("-j", "--jobs", action="append", default=["jobs"], help="folder with jobs to be imported")
+    base.add_argument("-d", "--data-dir", default="data", help="folder with the data files to be used")
+    base.add_argument("-l", "--local", action="store_true", help="force running the server locally")
+    base.add_argument("-p", "--port", type=ts.port_number, default=8888, help="server's port number",
+                      note="this will be the listening port of the proxy, this of the scheduler will be port+1")
     # 2. notification settings
     notify = run.add_argument_group("notification options")
     notify.add_argument("--smtp-config", default="conf/smtp.ini", type=ts.ini_config,
@@ -107,7 +109,7 @@ if __name__ == "__main__":
     if args.command == "run":
         logger.info("Setting up the virtual environment...")
         os.environ['NDSCHEDULER_SETTINGS_MODULE'] = "ndscheduler.default_settings"
-        with VirtualEnv(".venv", VENV_REQS, no_cache=True, verbose=args.verbose) as venv:
+        with VirtualEnv(".venv", VENV_REQS, no_cache=args.no_venv_cache, verbose=args.verbose) as venv:
             from core import base, run_proxy, run_server
             from ndscheduler import settings
             base._load_mail_config(args.smtp_config, *(args.smtp_profile or []))
