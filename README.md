@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/dhondta/bots-scheduler/raw/master/docs/img/logo.png"></p>
+<p align="center"><img src="https://github.com/dhondta/bots-scheduler/raw/master/docs/pages/img/logo.png"></p>
 <h1 align="center">Bots Scheduler <a href="https://twitter.com/intent/tweet?text=Bots Scheduler%20-%20A%20Web%20interface%20for%20scheduling%20cron-style%20OSINT%20tasks%20relying%20on%20Web%20services%20like%20Shodan,%20Censys%20or%20HaveIBeenPwned.%0D%0Ahttps%3a%2f%2fgithub%2ecom%2fdhondta%2fbots-scheduler%0D%0A&hashtags=python,cybersecurity,bots,infosec,webserver,cron,osint,taskscheduler,shodan,censys,haveibeenpwned"><img src="https://img.shields.io/badge/Tweet--lightgrey?logo=twitter&style=social" alt="Tweet" height="20"/></a></h1>
 <h3 align="center">Schedule your OSINT task the Cron way with a Web interface.</h3>
 
@@ -19,13 +19,13 @@ $ ./bots-scheduler reset
 
 ## :sunglasses: Demonstrations
 
-<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/demos/running-the-server.gif" alt="Running the server from the command line"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/pages/demos/running-the-server.gif" alt="Running the server from the command line"></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/demos/auth-proxy.gif" alt="Authenticating with the reverse proxy"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/pages/demos/auth-proxy.gif" alt="Authenticating with the reverse proxy"></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/demos/presentation.gif" alt="Browsing the WUI panels"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/pages/demos/presentation.gif" alt="Browsing the WUI panels"></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/demos/adding-and-running-jobs.gif" alt="Adding and running a job, inspecting the report"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/dhondta/bots-scheduler/master/docs/pages/demos/adding-and-running-jobs.gif" alt="Adding and running a job, inspecting the report"></p>
 
 
 ## :clap:  Supporters

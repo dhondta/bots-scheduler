@@ -1,0 +1,49 @@
+site_author: dhondta
+site_name: "Bots Scheduler"
+repo_url: https://github.com/dhondta/bots-scheduler
+copyright: Copyright &copy; 2019-2023 Alexandre D'Hondt
+docs_dir: pages
+nav:
+  - Introduction: index.md
+  - 'Server tuning': server.md
+  - 'Available jobs': jobs.md
+  - 'How to make a job': howto.md
+extra_css:
+  - css/extra.css
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:alexandre.dhondt@gmail.com
+      name: Contact Alex
+    - icon: fontawesome/brands/github
+      link: https://github.com/dhondta
+      name: Alex on GitHub
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/alexandre-d-2ab2aa14/
+      name: Alex on LinkedIn
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/alex_dhondt
+      name: Alex on Twitter
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  logo: img/logo.png
+  favicon: img/icon.png
+use_directory_urls: false
+markdown_extensions:
+  - admonition
+  - codehilite:
+      linenums: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - toc:
+      permalink: true
