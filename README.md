@@ -3,8 +3,6 @@
 <h3 align="center">Schedule your OSINT task the Cron way with a Web interface.</h3>
 
 [![Read The Docs](https://readthedocs.org/projects/bots-scheduler/badge/?version=latest)](https://bots-scheduler.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.com/dhondta/bots-scheduler.svg?branch=master)](https://travis-ci.com/dhondta/bots-scheduler)
-[![Requirements Status](https://requires.io/github/dhondta/bots-scheduler/requirements.svg?branch=master)](https://requires.io/github/dhondta/bots-scheduler/requirements/?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/dhondta/bots-scheduler/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/dhondta/bots-scheduler?targetFile=requirements.txt)
 [![License](https://img.shields.io/badge/license-AGPL%20v3-lightgrey.svg)](https://github.com/dhondta/bots-scheduler/blob/master/LICENSE)
 
